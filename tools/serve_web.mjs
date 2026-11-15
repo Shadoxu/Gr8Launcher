@@ -7,7 +7,7 @@ import release from '../web/api/release.mjs';
 
 const root = fileURLToPath(new URL('../dist/web/', import.meta.url));
 const port = Number(process.env.PORT || 3000);
-const mime = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8', '.xml': 'application/xml; charset=utf-8', '.txt': 'text/plain; charset=utf-8', '.png': 'image/png', '.ico': 'image/x-icon', '.ttf': 'font/ttf' };
+const mime = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8', '.xml': 'application/xml; charset=utf-8', '.txt': 'text/plain; charset=utf-8', '.png': 'image/png', '.ico': 'image/x-icon', '.ttf': 'font/ttf', '.woff2': 'font/woff2' };
 const aliases = { '/home': '/', '/index.html': '/', '/skins': '/cosmetics', '/support': '/help', '/cubeon-bench': '/benchmarks', '/cubeon-bench/': '/benchmarks', '/cubeon-bench/index.html': '/benchmarks' };
 http.createServer(async (req, res) => {
     try {

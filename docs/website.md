@@ -8,17 +8,24 @@ and shared CSS/JavaScript directly; no frontend dependencies are required.
 ## Deploy from the repository root on Vercel
 
 Import this Git repository and leave **Root Directory** at the repository root
-(blank or `.`). The root `vercel.json` sets:
+(blank or `.`). Choose **Services** when Vercel presents its application preset.
+The root `vercel.json` explicitly declares one `website` service:
 
-- Framework preset: **Other** (`framework: null`).
-- Build command: `npm run build`.
-- Output directory: `dist/web`.
+- Service root: `web`.
+- Service build command: `npm run build` from `web/`.
+- Service output directory: `dist` (the repository's `web/dist/`).
+- A top-level catch-all rewrite sends public requests to `website`.
 
-The root `package.json` exposes the build command, and root `api/release.mjs`
-lets Vercel discover the function implemented in `web/api/release.mjs`.
-Do not change the Root Directory to `web` for the normal deployment.
-Vercel supplies Node.js; the website build does not install Python, build the
-desktop launcher, or need any local `temp/` files.
+This declaration excludes the desktop Python application and `REF/` backup
+applications from the set of services deployed. `.vercelignore` filters uploads;
+it does not prevent the GitHub import screen from finding application folders.
+Build and function settings belong inside the website service in Services mode.
+The service's `web/api/release.mjs` supplies current release metadata.
+
+Push the updated root config and website package files before refreshing the
+GitHub import screen. If the screen still lists Python applications, reload or
+restart the import so it reads the latest commit. No Python installation or
+desktop-launcher build is needed for the website deployment.
 
 For a custom domain, set **SITE_URL** to its full origin, such as
 `https://launcher.example.com`, and rebuild. Without it, the build uses
@@ -26,11 +33,10 @@ For a custom domain, set **SITE_URL** to its full origin, such as
 canonical URLs, social previews, the sitemap, robots rules, and `llms.txt`.
 Local builds fall back to `http://localhost:3000`.
 
-A secondary `web/vercel.json` is included for a direct static-folder import.
-That mode serves the source files without the root build, so configure SEO
-URLs yourself by replacing `__SITE_URL__` throughout that folder. The root
-build is recommended because it does this automatically and excludes API
-source from the public static output.
+The secondary `web/vercel.json` uses the same website build when `web/` is
+selected directly; keep the repository's shared `tools/build_web.mjs` available.
+The normal deployment imports the repository root and reads its explicit
+service declaration. Local root builds keep writing to `dist/web/` for preview.
 
 ## Local preview
 
@@ -84,9 +90,9 @@ an IndexNow submission with its public key-file URL.
 
 Source HTML contains `__SITE_URL__` placeholders; deploy the generated output
 for correct production metadata. Existing launcher font notices and the GPL
-license are preserved in `web/assets/licenses/`. Minecraftia is bundled in
-`web/assets/fonts/`, with its attribution, embedded license notice, and original
-readme retained in `web/assets/licenses/`. The site makes no Google Fonts requests.
+license are preserved in `web/assets/licenses/`. Minecraftia and Inter are bundled in
+`web/assets/fonts/`. Their attribution, font notices, and Inter’s SIL Open Font
+License are retained in `web/assets/licenses/`. The site makes no Google Fonts requests.
 
 Local validation scripts and screenshots belong in ignored `temp/`. They are
 not included in a clone or required for deployment.

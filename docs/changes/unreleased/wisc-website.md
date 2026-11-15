@@ -8,5 +8,5 @@
 - Refined the website with clearer navigation, responsive feature cards, softer surfaces, and the original black-and-white palette.
 - Added slim custom scrollbars with rounded gray handles and hover feedback.
 - Added smooth wheel scrolling across the website while respecting reduced-motion preferences and native scrolling inside controls.
-- Switched the website typography to bundled Minecraftia and made the background lines static.
+- Used bundled Minecraftia for large headings and Inter for regular text and controls, and made the background lines static.
 - Kept support and performance pages focused on the launcher’s actual features and setup guidance.

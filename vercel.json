@@ -1,14 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": null,
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist/web",
-  "cleanUrls": true,
-  "functions": {
-    "api/release.mjs": {
-      "maxDuration": 15
-    }
-  },
   "redirects": [
     {
       "source": "/home",
@@ -52,6 +43,27 @@
           "value": "camera=(), microphone=(), geolocation=()"
         }
       ]
+    }
+  ],
+  "services": {
+    "website": {
+      "root": "web",
+      "buildCommand": "npm run build",
+      "outputDirectory": "dist",
+      "cleanUrls": true,
+      "functions": {
+        "api/release.mjs": {
+          "maxDuration": 15
+        }
+      }
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": {
+        "service": "website"
+      }
     }
   ]
 }

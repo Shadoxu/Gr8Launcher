@@ -5,7 +5,8 @@ import path from 'node:path';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const source = path.join(root, 'web');
-const output = path.join(root, 'dist', 'web');
+if (process.argv.slice(2).some(argument => argument !== '--service')) throw new Error('Usage: node tools/build_web.mjs [--service]');
+const output = process.argv.includes('--service') ? path.join(source, 'dist') : path.join(root, 'dist', 'web');
 const configured = process.env.SITE_URL || process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL || 'http://localhost:3000';
 const site = new URL(configured.includes('://') ? configured : `https://${configured}`);
 if (!['http:', 'https:'].includes(site.protocol) || site.username || site.password || site.pathname !== '/' || site.search || site.hash) throw new Error('SITE_URL must be a plain HTTP(S) origin, for example https://launcher.example.com');
@@ -13,7 +14,7 @@ const origin = site.origin;
 await rm(output, { recursive: true, force: true });
 await mkdir(output, { recursive: true });
 for (const item of await readdir(source, { withFileTypes: true })) {
-    if (['api', 'vercel.json'].includes(item.name)) continue;
+    if (['api', 'vercel.json', 'dist', 'node_modules', 'package.json', 'package-lock.json', '.vercel'].includes(item.name)) continue;
     await cp(path.join(source, item.name), path.join(output, item.name), { recursive: true });
 }
 let pages = 0;
@@ -35,4 +36,4 @@ async function finish(directory) {
     }
 }
 await finish(output);
-console.log(`Built ${pages} Wisc pages in dist/web for ${origin}`);
+console.log(`Built ${pages} Wisc pages in ${path.relative(root, output)} for ${origin}`);

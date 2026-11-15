@@ -1,5 +1,5 @@
 
-:root{--bg:#09090a;--s1:#111113;--s2:#18181b;--line:#242428;--tx:#f4f4f5;--mu:#8b8b92;--r:14px;--px:'Minecraftia',monospace;--sans:'Minecraftia',sans-serif;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root{--bg:#09090a;--s1:#111113;--s2:#18181b;--line:#242428;--tx:#f4f4f5;--mu:#8b8b92;--r:14px;--px:'Minecraftia',monospace;--sans:'Inter',system-ui,sans-serif;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#09090a}}
 :root[data-theme="dark"]{--bg:#09090a}
 *{box-sizing:border-box;margin:0}html{scroll-behavior:smooth;scroll-padding-top:80px;background:var(--bg)}
