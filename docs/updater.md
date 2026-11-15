@@ -114,8 +114,11 @@ or modify the repository, `.assets/`, `build/`, or `dist/`.
 Query GitHub's public releases endpoint:
 
 ```text
-GET https://api.github.com/repos/jaydeeppatil23/Gr8Launcher/releases/latest
+GET https://api.github.com/repos/wisc-launcher/wisc/releases/latest
 ```
+
+Release links from the former `jaydeeppatil23/Gr8Launcher` repository name remain
+valid for cached releases and redirects.
 
 - **Headers:** Send a distinct `User-Agent: Gr8Launcher-Updater/<version>` and `Accept: application/vnd.github+json`.
 - **ETag caching:** Store the ETag and complete validated release record together, and send `If-None-Match`. On `304 Not Modified`, reuse that record. If it is missing or invalid, repeat once without the ETag. Unauthenticated conditional requests do not guarantee zero rate-limit usage; no GitHub token is embedded in the launcher.
@@ -170,8 +173,9 @@ release, not another lookup of "latest."
 3. **Failure Handling:**
    - If checksum mismatch occurs, delete corrupted `.part` file, log the error, and notify the user with a Retry option. Never execute unverified binaries.
 
-Accept HTTPS URLs from the fixed repository's release infrastructure and validate
-redirects against supported GitHub asset hosts. Do not execute commands from
+Accept HTTPS release URLs from `wisc-launcher/wisc` and its known former name,
+`jaydeeppatil23/Gr8Launcher`, and validate redirects against supported GitHub
+asset hosts. Do not execute commands from
 release metadata. Workflow reruns can replace assets: on identity changes or a
 checksum mismatch, discard the attempt and rediscover rather than mixing releases.
 The helper rechecks the expected hash immediately before application and prevents

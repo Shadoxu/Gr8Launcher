@@ -1,12 +1,12 @@
 # Shared progress
 
-The bottom progress bar stays available on every launcher page. Minecraft
-installation and repair, mod searches and details, mod downloads and file
+One shared progress bar stays available at the bottom of every launcher page.
+Minecraft launch, installation and repair, mod searches and details, mod downloads and file
 changes, skin refresh, sign-in, and version fetches use the same `ProgressHost`.
-Its colors follow the selected classic theme and match the download footer.
-The status and detail text above the bar appear only on Home. Other pages keep
-the bar without the text row, including during active work. Returning to Home
-restores the current task or idle status.
+Its colors follow the selected classic theme. Home uses this same bar for
+Minecraft instead of a separate launch bar. Foreground operations show status,
+percentage, and detail text above the bar; idle and page-loading work keep only
+the bar. Navigation preserves the current operation and measured progress.
 
 Unknown totals use an animated bar without a percentage. Measured work uses a
 filled bar; mod downloads report bytes across the complete batch, including

@@ -278,7 +278,7 @@ def main(page: ft.Page):
             if launch_activity["task"] is None:
                 launch_activity["task"] = progress_host.begin(
                     state.launcher_log_state.get("status") or "Preparing Minecraft...",
-                    priority=100, delay=0, show_percentage=False,
+                    priority=100, delay=0,
                 )
             launch_activity["task"].update(
                 state.launcher_log_state.get("status") or "Preparing Minecraft...",
@@ -286,9 +286,6 @@ def main(page: ft.Page):
             )
         else:
             finish_launch_progress()
-        classic_update = state.launcher_log_state.get("classic_progress")
-        if classic_update:
-            classic_update(status, None if value is _PROGRESS_UNCHANGED else value, eta)
 
     async def launch_profile(target: dict):
         if updater_ui and updater_ui.applying:
@@ -1766,24 +1763,6 @@ def main(page: ft.Page):
                 ],
             )
 
-            launch_status = ft.Text(
-                launcher_log_state["status"]
-                or (
-                    f"Selected {launch_targets[launch_selection['key']]['name']}"
-                    if launch_selection["key"] in launch_targets
-                    else "Choose a profile to play."
-                ),
-                size=12,
-                color=theme["text_secondary"],
-                overflow=ft.TextOverflow.ELLIPSIS,
-                expand=True,
-            )
-            launch_eta = ft.Text(
-                launcher_log_state.get("eta", ""),
-                size=12,
-                color=theme["text_muted"],
-                text_align=ft.TextAlign.RIGHT,
-            )
             selected_target = launch_targets.get(launch_selection["key"])
             selected_version_name = ft.Text(
                 selected_target["name"] if selected_target else "Choose a profile",
@@ -1927,114 +1906,6 @@ def main(page: ft.Page):
                     if installed
                     else "Not installed — Click Play to install"
                 )
-            white_beam = ft.Container(
-                left=-100,
-                top=0,
-                bottom=0,
-                width=90,
-                height=10,
-                opacity=0.0,
-                visible=True,
-                gradient=ft.LinearGradient(
-                    begin=ft.Alignment(-1, 0),
-                    end=ft.Alignment(1, 0),
-                    colors=[
-                        ft.Colors.with_opacity(0.0, ft.Colors.WHITE),
-                        ft.Colors.with_opacity(0.08, ft.Colors.WHITE),
-                        ft.Colors.with_opacity(0.22, ft.Colors.WHITE),
-                        ft.Colors.with_opacity(0.40, ft.Colors.WHITE),
-                        ft.Colors.with_opacity(0.22, ft.Colors.WHITE),
-                        ft.Colors.with_opacity(0.08, ft.Colors.WHITE),
-                        ft.Colors.with_opacity(0.0, ft.Colors.WHITE),
-                    ],
-                    stops=[0.0, 0.20, 0.38, 0.50, 0.62, 0.80, 1.0],
-                ),
-                animate_position=ft.Animation(1000, ft.AnimationCurve.LINEAR),
-            )
-            shimmer_beam = white_beam
-            beam_1 = white_beam
-            beam_2 = white_beam
-
-            launch_progress_fill = ft.Container(
-                expand=1,
-                height=10,
-                border_radius=10,
-                bgcolor=theme["btn_primary"],
-                clip_behavior=ft.ClipBehavior.HARD_EDGE,
-                visible=False,
-                content=ft.Stack(
-                    expand=True,
-                    controls=[white_beam],
-                ),
-            )
-            launch_progress_empty = ft.Container(
-                expand=1000,
-                height=10,
-                bgcolor=ft.Colors.TRANSPARENT,
-            )
-            launch_progress_track = ft.Container(
-                height=10,
-                border_radius=10,
-                bgcolor=theme["surface"],
-                border=ft.Border.all(1, ft.Colors.with_opacity(0.18, theme["border"])),
-                clip_behavior=ft.ClipBehavior.HARD_EDGE,
-                content=ft.Row(
-                    spacing=0,
-                    controls=[
-                        launch_progress_fill,
-                        launch_progress_empty,
-                    ],
-                ),
-            )
-            launch_progress = launch_progress_track
-            launch_progress_container = launch_progress_track
-
-            def set_track_progress(val, force=False):
-                if val is None:
-                    changed = launcher_log_state.get("progress") is not None
-                    launcher_log_state["progress"] = None
-                    launch_progress_fill.visible = False
-                    launch_progress_empty.visible = True
-                    launch_progress_empty.expand = 1000
-                    launch_progress_track.value = None
-                    return changed
-                else:
-                    try:
-                        v = max(0.0, min(1.0, float(val)))
-                    except (ValueError, TypeError):
-                        v = 0.0
-                    old_v = launcher_log_state.get("progress")
-                    if not force and old_v is not None and abs(v - old_v) < 0.003 and (0.005 < v < 0.995):
-                        return False
-                    launcher_log_state["progress"] = v
-                    if v <= 0.001:
-                        if launcher_log_state.get("running"):
-                            launch_progress_fill.visible = True
-                            launch_progress_empty.visible = True
-                            launch_progress_fill.expand = 40
-                            launch_progress_empty.expand = 960
-                        else:
-                            launch_progress_fill.visible = False
-                            launch_progress_empty.visible = True
-                            launch_progress_empty.expand = 1000
-                    elif v >= 0.999:
-                        launch_progress_fill.visible = True
-                        launch_progress_fill.expand = 1000
-                        launch_progress_empty.visible = False
-                    else:
-                        fill_flex = max(40, min(999, int(v * 1000)))
-                        empty_flex = max(1, 1000 - fill_flex)
-                        launch_progress_fill.visible = True
-                        launch_progress_empty.visible = True
-                        launch_progress_fill.expand = fill_flex
-                        launch_progress_empty.expand = empty_flex
-                    launch_progress_track.value = v
-                    return True
-
-            set_track_progress(launcher_log_state.get("progress"), force=True)
-            launcher_log_state["set_track_progress"] = set_track_progress
-            launcher_log_state["white_beam"] = white_beam
-
             launcher_log_list = ft.ListView(
                 controls=[
                     ft.Text(
@@ -2472,12 +2343,8 @@ def main(page: ft.Page):
                         pass
 
                 refresh_launch_button()
-                launch_status.value = f"Selected {selected_target['name']}"
-                launcher_log_state["status"] = launch_status.value
-                try:
-                    launch_status.update()
-                except Exception:
-                    pass
+                launcher_log_state["status"] = f"Selected {selected_target['name']}"
+                progress_host.set_idle(launcher_log_state["status"])
                 page.run_task(animate_card_selection, selected_target)
 
             def build_library_card(key, target):
@@ -2796,8 +2663,6 @@ def main(page: ft.Page):
             selection_rows = []
             selection_highlight = ft.Container(visible=False)
 
-            launch_progress_state = {"maximum": 0}
-
             def refresh_launch_button():
                 button = launcher_log_state.get("play_button")
                 if button is None:
@@ -2845,60 +2710,6 @@ def main(page: ft.Page):
                 except Exception:
                     pass
 
-            def update_launch_progress(status=None, value=None, eta=None):
-                status_changed = False
-                if status is not None:
-                    status_str = redact_credentials(str(status))
-                    status_changed = (launcher_log_state.get("status") != status_str)
-                    launcher_log_state["status"] = status_str
-                    if launcher_log_state["running"]:
-                        if status_str.startswith("Download ") or "Download" in status_str:
-                            launcher_log_state["downloading"] = True
-                        elif status_str in (
-                            "Building launch command...",
-                            "Starting Minecraft...",
-                        ):
-                            launcher_log_state["downloading"] = False
-                            launcher_log_state["eta"] = ""
-                track_changed = False
-                if value is not None:
-                    set_fn = launcher_log_state.get("set_track_progress", set_track_progress)
-                    track_changed = set_fn(value)
-                if eta is not None:
-                    launcher_log_state["eta"] = eta
-
-                status_control = launcher_log_state.get("status_control")
-                eta_control = launcher_log_state.get("eta_control")
-                progress_control = launcher_log_state.get("progress_control", launch_progress_track)
-                is_on_home = active_page.get("name") == "home"
-
-                need_update = []
-                if status is not None and status_control is not None:
-                    status_control.value = launcher_log_state["status"]
-                    if is_on_home and status_changed:
-                        need_update.append(status_control)
-                if track_changed and is_on_home and progress_control is not None:
-                    need_update.append(progress_control)
-                if eta_control is not None and (eta is not None or status_changed):
-                    eta_control.value = launcher_log_state.get("eta", "")
-                    if is_on_home:
-                        need_update.append(eta_control)
-
-                if need_update:
-                    try:
-                        page.update(*need_update)
-                    except Exception:
-                        for c in need_update:
-                            try:
-                                c.update()
-                            except Exception:
-                                pass
-
-                if status_changed:
-                    refresh_launch_button()
-
-            launcher_log_state["classic_progress"] = update_launch_progress
-
             async def launch_selected_game():
                 target = launch_targets.get(launch_selection['key'])
                 if target is None:
@@ -2917,8 +2728,9 @@ def main(page: ft.Page):
                             ["[Launcher] Cancellation requested; finishing the current file..."]
                         )
                         update_launch_progress(
-                            "Cancelling after the current file...", None
+                            "Cancelling after the current file...", value=None, eta=""
                         )
+                        refresh_launch_button()
                     return
                 await launch_selected_game()
 
@@ -3529,27 +3341,9 @@ def main(page: ft.Page):
                 return build_skins_view_external(page, theme, notify, open_url=open_url, online_available=lambda: online_available, navigate=navigate, features=features)
 
             home_status_row = ft.Row(
-                spacing=20,
+                alignment=ft.MainAxisAlignment.END,
                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                controls=[
-                    ft.Column(
-                        expand=True,
-                        spacing=5,
-                        horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
-                        controls=[
-                            ft.Row(
-                                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                                vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                                controls=[
-                                    launch_status,
-                                    launch_eta,
-                                ],
-                            ),
-                            launch_progress_container,
-                        ],
-                    ),
-                    bottom_log_toggle_button,
-                ],
+                controls=[bottom_log_toggle_button],
             )
 
             if name == "installations":
@@ -3649,19 +3443,9 @@ def main(page: ft.Page):
                 pages[name] = build_skins_view()
 
             if name == "home":
-                launcher_log_state["status_control"] = launch_status
-                launcher_log_state["progress_control"] = launch_progress
-                launcher_log_state["eta_control"] = launch_eta
-                launcher_log_state["white_beam"] = white_beam
-                launcher_log_state["set_track_progress"] = set_track_progress
                 launcher_log_state["floating_logs_window"] = floating_logs_window
                 launcher_log_state["bottom_log_toggle_button"] = bottom_log_toggle_button
                 if launcher_log_state.get("running"):
-                    set_track_progress(launcher_log_state.get("progress"), force=True)
-                    if launcher_log_state.get("status"):
-                        launch_status.value = launcher_log_state["status"]
-                    if launcher_log_state.get("eta"):
-                        launch_eta.value = launcher_log_state["eta"]
                     for card in library_cards.values():
                         card.disabled = True
                         card.opacity = 0.5
@@ -3819,9 +3603,12 @@ def main(page: ft.Page):
         tabs_buttons.content.controls.append(features.update_badge)
         features.refresh_update_badge()
         page.add(ft.Stack(expand=True, on_size_change=features.toasts.resize, controls=[
-            ft.Column([navbar, content_area], expand=True, spacing=0),
+            ft.Column([
+                navbar,
+                content_area,
+                ft.Container(padding=ft.Padding.symmetric(horizontal=8), content=features.progress),
+            ], expand=True, spacing=0, horizontal_alignment=ft.CrossAxisAlignment.STRETCH),
             features.toasts,
-            ft.Container(left=20, right=20, bottom=0, content=features.progress),
         ]))
         features.start()
         features.player_changed()
