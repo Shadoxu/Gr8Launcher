@@ -6,26 +6,26 @@ Source: https://github.com/wisc-launcher/wisc
 
 ## Website
 
-- [Small launcher. Clear purpose.](__SITE_URL__/about): Wisc is a free, open-source Minecraft Java Edition launcher built with Python and Flet.
-- [Make room for smoother play.](__SITE_URL__/benchmarks): Choose the right Java runtime, keep your profiles organized, and tune settings for your own Minecraft setup.
-- [No extra tracking.](__SITE_URL__/cookies): This website has no added analytics, advertising scripts, application cookies, or local-storage features.
-- [Your skin. Your style.](__SITE_URL__/cosmetics): Import a skin PNG, preview its model, and manage your Ely.by appearance inside the launcher.
-- [A little guidance. A lot of play.](__SITE_URL__/docs): Everything you need to install Wisc, manage profiles, and understand your launcher data.
-- [Before you hit Play.](__SITE_URL__/doctor): A simple launch checklist for Wisc. Check these settings in the launcher and your game folder.
-- [Ready when you are.](__SITE_URL__/download): Get Wisc Launcher for Windows x64, or run the Python source on your own system.
-- [Every path, in one place.](__SITE_URL__/files): Browse the website’s product pages, guides, tools, and policy documents.
-- [Your first world awaits.](__SITE_URL__/getting-started): Install the launcher, choose a profile, and make sure Java matches your Minecraft version.
-- [A hand when you need one.](__SITE_URL__/help): Find a practical guide or report a reproducible launcher issue.
-- [Minecraft, without the noise.](__SITE_URL__/): Versions, mods and skins in one dark, quiet window. A free, open-source Minecraft Java Edition launcher.
-- [Open source, with credit.](__SITE_URL__/licenses): The launcher’s source and bundled third-party components retain their own license terms.
-- [One window. Your Minecraft.](__SITE_URL__/minecraft-launcher): Wisc brings Minecraft Java versions, profiles, mods, skins, and launch settings together.
-- [A whole new setup.](__SITE_URL__/modpacks): Browse Modrinth and CurseForge packs, or import a pack archive into a separate instance.
-- [Your mods, in order.](__SITE_URL__/mods): Discover compatible mods, install local JARs, and manage each profile’s collection.
-- [Meet in the same world.](__SITE_URL__/multiplayer): Connect from Minecraft’s Multiplayer screen using a compatible profile and the server’s account requirements.
-- [Your data, explained.](__SITE_URL__/privacy): Understand the website’s external requests and the launcher’s local data and connected services.
-- [Free to download.](__SITE_URL__/refunds): Wisc Launcher has no paid downloads, subscriptions, or purchases on this website.
-- [A few clear terms.](__SITE_URL__/terms): Use Wisc with respect for Minecraft’s license, provider rules, and the project’s open-source license.
-- [Get back to your world.](__SITE_URL__/troubleshooting): Work through the common causes of launch, download, mod, and skin problems.
+- [Wisc Launcher | Free Minecraft Java Edition Launcher](__SITE_URL__/): Wisc is a free, open-source Minecraft Java Edition launcher. Manage versions, profiles, mods and Ely.by skins. Download for Windows or run from source.
+- [About Wisc Launcher | Open-Source Minecraft Launcher](__SITE_URL__/about): Learn about Wisc Launcher, a free Minecraft Java Edition launcher built with Python and Flet, with public source code and releases on GitHub.
+- [Minecraft Performance Settings Guide | Wisc Launcher](__SITE_URL__/benchmarks): Tune Java and memory settings for your Wisc Launcher profiles, check mod compatibility, and measure Minecraft performance on your own setup.
+- [Cookies & Website Storage | Wisc Launcher](__SITE_URL__/cookies): Learn about the Wisc Launcher website’s cookies and storage. The site has no added analytics, advertising scripts or local-storage features.
+- [Minecraft Skins & Ely.by Setup | Wisc Launcher](__SITE_URL__/cosmetics): Sign in with Ely.by to customize skins in Wisc Launcher. Import skin PNG files, preview classic or slim models, and manage your Ely.by appearance.
+- [Wisc Launcher Documentation | Setup, Mods & Profiles](__SITE_URL__/docs): Read Wisc Launcher documentation for installation, Minecraft profiles, mods, modpacks, Ely.by skins, local data and launcher updates.
+- [Minecraft Launch Checklist | Wisc Launcher](__SITE_URL__/doctor): Check Java, memory settings, account type, Minecraft version and mod compatibility before launching a Wisc Launcher profile.
+- [Download Wisc Launcher for Windows | Installer & ZIP](__SITE_URL__/download): Download the latest Wisc Launcher Windows x64 installer or portable ZIP, verify checksums, or follow instructions to run the Python source.
+- [All Pages & Guides | Wisc Launcher](__SITE_URL__/files): Browse Wisc Launcher downloads, Minecraft setup guides, mods, modpacks, documentation, support and website policy pages.
+- [Getting Started with Wisc Launcher | Setup Guide](__SITE_URL__/getting-started): Set up Wisc Launcher, choose compatible Java, add an offline or Ely.by account, and create your first Minecraft Java Edition profile.
+- [Wisc Launcher Help & Support | Guides and Issues](__SITE_URL__/help): Get help with Wisc Launcher installation, Minecraft profiles, mods and skins. Find troubleshooting guides or report a reproducible issue on GitHub.
+- [Open-Source & Font Licenses | Wisc Launcher](__SITE_URL__/licenses): Review Wisc Launcher’s GNU GPL v3 license and the notices for bundled artwork, fonts and third-party components.
+- [Minecraft Versions & Profiles | Wisc Launcher](__SITE_URL__/minecraft-launcher): Manage Minecraft Java Edition profiles in Wisc Launcher with Vanilla, Fabric, Forge, NeoForge or Quilt, plus Java and memory settings.
+- [Minecraft Modpacks Guide | Wisc Launcher](__SITE_URL__/modpacks): Browse Modrinth and CurseForge modpacks in Wisc Launcher, or import a pack archive and install it into a separate Minecraft instance.
+- [Minecraft Mods Guide | Wisc Launcher](__SITE_URL__/mods): Find Minecraft mods on Modrinth and CurseForge, install compatible releases or local JAR files, and manage mods for each Wisc Launcher profile.
+- [Minecraft Multiplayer Setup Guide | Wisc Launcher](__SITE_URL__/multiplayer): Prepare a Wisc Launcher profile for Minecraft multiplayer. Match the server’s game version, mod loader, mods and account requirements.
+- [Privacy & Launcher Data | Wisc Launcher](__SITE_URL__/privacy): Understand Wisc Launcher’s local settings, profiles and credential storage, connected services, and the website’s external requests.
+- [Free Downloads & Refund Policy | Wisc Launcher](__SITE_URL__/refunds): Wisc Launcher is free to download. This website offers no paid downloads, subscriptions or purchases; read the project’s refund information.
+- [Terms of Use | Wisc Launcher](__SITE_URL__/terms): Read the Wisc Launcher terms of use, including Minecraft licensing, connected provider rules, and the project’s open-source license.
+- [Wisc Launcher Troubleshooting | Java, Mods & Downloads](__SITE_URL__/troubleshooting): Fix common Wisc Launcher problems with Java, Minecraft installation, downloads, mod compatibility and Ely.by skins using practical checks.
 
 ## Current project details
 

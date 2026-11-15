@@ -15,6 +15,8 @@ The root `vercel.json` explicitly declares one `website` service:
 - Service build command: `npm run build` from `web/`.
 - Service output directory: `dist` (the repository's `web/dist/`).
 - A top-level catch-all rewrite sends public requests to `website`.
+- Service routes map clean page URLs to their HTML files and return the custom
+  `404.html` document with HTTP 404 after static files and functions are checked.
 
 This declaration excludes the desktop Python application and `REF/` backup
 applications from the set of services deployed. `.vercelignore` filters uploads;
@@ -32,6 +34,10 @@ For a custom domain, set **SITE_URL** to its full origin, such as
 `VERCEL_PROJECT_PRODUCTION_URL`, then `VERCEL_URL`. These values populate
 canonical URLs, social previews, the sitemap, robots rules, and `llms.txt`.
 Local builds fall back to `http://localhost:3000`.
+Each page has a descriptive search title, description, and social preview.
+The build generates the sitemap and discovery page list from indexable HTML
+pages, excluding error documents and redirect aliases. Set `SITE_URL` to the
+public custom domain before deploying so search engines use that domain.
 
 The secondary `web/vercel.json` uses the same website build when `web/` is
 selected directly; keep the repository's shared `tools/build_web.mjs` available.
@@ -51,6 +57,15 @@ the custom 404 page, and the public release API. `npm run build` creates the
 static output; `npm run preview` serves an existing build. Change the preview
 port with `PORT`, and set `SITE_URL` if canonical URLs should use that port.
 
+Use `/docs`, `/download`, `/mods`, and the other extensionless page URLs.
+Their `.html` and trailing-slash forms permanently redirect to the clean URL,
+preserving query strings. Unknown addresses, including missing assets and API
+paths, show the Wisc 404 page with HTTP 404; `/404` also returns HTTP 404.
+The preview reads the same route rules as the Vercel website configuration.
+When adding a page, include its name in the clean-page and redirect route
+patterns in both Vercel configurations. The sitemap discovers it automatically
+unless its robots metadata contains `noindex`.
+
 ## Downloads and public API
 
 `GET /api/release` returns the latest stable GitHub release tag and any Windows
@@ -69,9 +84,10 @@ links with exact assets when live metadata is available.
 The site includes all requested page categories: launcher, mods, modpacks,
 skins, downloads, multiplayer, documentation, help, troubleshooting, about,
 terms, privacy, cookies/storage, refunds, licenses, a page directory, performance guidance, and
-403/404/429/500/502/503 error documents. Vercel uses `404.html` for missing
-static resources. The other error documents can be linked or used by a
-hosting integration; they do not replace Vercel's own platform error screens.
+403/404/429/500/502/503 error documents. Explicit service routes use `404.html`
+for missing pages and static resources with HTTP 404. Each clean error-document
+URL returns its matching HTTP status and is excluded from search indexing.
+These routes do not replace Vercel's own platform error screens.
 
 The `doctor.html` page provides a static launch checklist. `benchmarks.html`
 provides Java, memory, and measurement guidance without presenting unverified
@@ -96,3 +112,7 @@ License are retained in `web/assets/licenses/`. The site makes no Google Fonts r
 
 Local validation scripts and screenshots belong in ignored `temp/`. They are
 not included in a clone or required for deployment.
+With the local scripts and their Python dependencies present, start the preview
+and run `python -B -m unittest temp.test_web_routes_seo temp.test_web_routes_browser`
+from the repository root. These local-only checks cover clean routes, redirects,
+HTTP error statuses, metadata, sitemap entries, and the desktop/mobile 404 layout.
