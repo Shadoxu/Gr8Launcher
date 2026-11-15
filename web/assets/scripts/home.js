@@ -82,62 +82,41 @@ const hero = document.querySelector('.hero');
 const canvas = document.getElementById('bg');
 const context = canvas.getContext('2d');
 const tilt = document.getElementById('tilt');
-let visible = true;
-let width = 0;
-let height = 0;
-let phase = 0;
-let scrollProgress = 0;
-let pointerX = -999;
-let pointerY = -999;
-let frame;
-let lastPaint = 0;
-function resize() {
+
+function drawBackground() {
     const ratio = Math.min(devicePixelRatio || 1, 2);
-    width = hero.clientWidth;
-    height = hero.clientHeight;
+    const width = hero.clientWidth;
+    const height = hero.clientHeight;
     canvas.width = width * ratio;
     canvas.height = height * ratio;
     context.setTransform(ratio, 0, 0, ratio, 0, 0);
-    if (reducedMotion) paint(0);
-}
-function paint(timestamp) {
-    frame = undefined;
-    if (!visible || document.hidden) return;
-    if (timestamp - lastPaint >= 30 || reducedMotion) {
-        lastPaint = timestamp;
-        if (!reducedMotion) phase += 0.012;
-        context.clearRect(0, 0, width, height);
-        context.lineWidth = 1;
-        for (let line = 0; line < 30; line++) {
-            const baseline = 40 + line * height * 0.82 / 30;
-            context.beginPath();
-            context.strokeStyle = `rgba(255,255,255,${0.05 + 0.07 * (0.5 + 0.5 * Math.sin(line * 0.5 + phase * 2))})`;
-            for (let x = 0; x <= width; x += 8) {
-                let y = baseline + 26 * Math.sin(x * 0.004 + phase * 2 + line * 0.22) + 14 * Math.sin(x * 0.009 - phase * 1.6 + line * 0.4);
-                const distance = Math.hypot(x - pointerX, y - pointerY);
-                if (distance < 220) y += (pointerY - y) * (1 - distance / 220) ** 2 * 0.3;
-                if (x) context.lineTo(x, y); else context.moveTo(x, y);
-            }
-            context.stroke();
+    context.clearRect(0, 0, width, height);
+    context.lineWidth = 1;
+    for (let line = 0; line < 30; line++) {
+        const baseline = 40 + line * height * 0.82 / 30;
+        context.beginPath();
+        context.strokeStyle = `rgba(255,255,255,${0.05 + 0.07 * (0.5 + 0.5 * Math.sin(line * 0.5))})`;
+        for (let x = 0; x <= width; x += 8) {
+            const y = baseline + 26 * Math.sin(x * 0.004 + line * 0.22) + 14 * Math.sin(x * 0.009 + line * 0.4);
+            if (x) context.lineTo(x, y); else context.moveTo(x, y);
         }
-        if (!reducedMotion) {
-            scrollProgress += (Math.min(scrollY / 460, 1) - scrollProgress) * 0.14;
-            tilt.style.transform = `rotateX(${18 * (1 - scrollProgress)}deg) scale(${0.94 + 0.06 * scrollProgress})`;
-        }
+        context.stroke();
     }
-    if (!reducedMotion) frame = requestAnimationFrame(paint);
 }
-function resume() {
-    if (visible && !document.hidden && !frame && !reducedMotion) frame = requestAnimationFrame(paint);
+
+let tiltFrame = 0;
+function updateTilt() {
+    tiltFrame = 0;
+    if (reducedMotion) {
+        tilt.style.transform = 'none';
+        return;
+    }
+    const progress = Math.min(window.scrollY / 460, 1);
+    tilt.style.transform = `rotateX(${18 * (1 - progress)}deg) scale(${0.94 + 0.06 * progress})`;
 }
-hero.addEventListener('pointermove', event => {
-    const bounds = hero.getBoundingClientRect();
-    pointerX = event.clientX - bounds.left;
-    pointerY = event.clientY - bounds.top;
-});
-hero.addEventListener('pointerleave', () => { pointerX = pointerY = -999; });
-new IntersectionObserver(entries => { visible = entries[0].isIntersecting; resume(); }).observe(hero);
-document.addEventListener('visibilitychange', resume);
-window.addEventListener('resize', resize);
-resize();
-resume();
+window.addEventListener('scroll', () => {
+    if (!tiltFrame) tiltFrame = requestAnimationFrame(updateTilt);
+}, { passive: true });
+new ResizeObserver(drawBackground).observe(hero);
+document.fonts.ready.then(drawBackground);
+updateTilt();

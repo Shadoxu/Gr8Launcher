@@ -27,7 +27,7 @@
     },
     {
       "source": "/cubeon-bench/:path*",
-      "destination": "/wisc-bench/",
+      "destination": "/benchmarks",
       "permanent": true
     }
   ],

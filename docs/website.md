@@ -62,16 +62,18 @@ links with exact assets when live metadata is available.
 
 The site includes all requested page categories: launcher, mods, modpacks,
 skins, downloads, multiplayer, documentation, help, troubleshooting, about,
-terms, privacy, cookies/storage, refunds, licenses, a page directory, and
+terms, privacy, cookies/storage, refunds, licenses, a page directory, performance guidance, and
 403/404/429/500/502/503 error documents. Vercel uses `404.html` for missing
 static resources. The other error documents can be linked or used by a
 hosting integration; they do not replace Vercel's own platform error screens.
 
-Launch Doctor generates a checklist from user answers; it cannot inspect local
-Java or Minecraft files. Wisc Bench records user-entered measurements, computes
-averages, and exports CSV. It stores runs under `wisc-bench-v1` in local browser
-storage, with an in-memory fallback. The sample `cubeon-bench` path redirects to
-`wisc-bench/`. The site does not claim measured launcher performance.
+The `doctor.html` page provides a static launch checklist. `benchmarks.html`
+provides Java, memory, and measurement guidance without presenting unverified
+performance results. The requested sample `cubeon-bench` path redirects to
+that performance guide. No benchmark application is added or advertised.
+The guides reflect current repository behavior: offline usernames and Ely.by
+accounts, Ely.by sign-in to unlock skin customization, Windows x64 packages,
+and the existing mod and modpack installation flows.
 
 `robots.txt`, `sitemap.xml`, `llms.txt`, `favicon.ico`, `_redirects`, and both
 Vercel configurations are included. The `_redirects` file is for compatible
@@ -82,8 +84,9 @@ an IndexNow submission with its public key-file URL.
 
 Source HTML contains `__SITE_URL__` placeholders; deploy the generated output
 for correct production metadata. Existing launcher font notices and the GPL
-license are preserved in `web/assets/licenses/`. Google Fonts is an external
-request, as documented on the website's privacy and storage pages.
+license are preserved in `web/assets/licenses/`. Minecraftia is bundled in
+`web/assets/fonts/`, with its attribution, embedded license notice, and original
+readme retained in `web/assets/licenses/`. The site makes no Google Fonts requests.
 
 Local validation scripts and screenshots belong in ignored `temp/`. They are
 not included in a clone or required for deployment.

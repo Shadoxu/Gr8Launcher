@@ -1,5 +1,12 @@
 ### Added
 
-- Added a Wisc Launcher website using the supplied homepage, bundled previews, download links, launcher and mod guides, support tools, legal pages, and custom error pages.
-- Added a local launch checklist and benchmark notebook with averages and CSV export.
-- Added Vercel deployment configuration at the repository root, with current GitHub release downloads and generated search and social metadata.
+- Added a Wisc Launcher website using the supplied homepage, bundled previews, current release downloads, launcher and mod guides, support pages, legal pages, and custom error pages.
+- Added Vercel deployment configuration at the repository root, with generated search and social metadata.
+
+### Changed
+
+- Refined the website with clearer navigation, responsive feature cards, softer surfaces, and the original black-and-white palette.
+- Added slim custom scrollbars with rounded gray handles and hover feedback.
+- Added smooth wheel scrolling across the website while respecting reduced-motion preferences and native scrolling inside controls.
+- Switched the website typography to bundled Minecraftia and made the background lines static.
+- Kept support and performance pages focused on the launcher’s actual features and setup guidance.
