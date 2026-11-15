@@ -15,8 +15,8 @@ from ui_controls import (
 )
 
 
-def _text(value: str, size: int = 13, *, color: str = theme.MUTED, **kwargs) -> ft.Text:
-    return ft.Text(value, size=size, color=color, **kwargs)
+def _text(value: str, size: int = 13, *, color: str | None = None, **kwargs) -> ft.Text:
+    return ft.Text(value, size=size, color=theme.MUTED if color is None else color, **kwargs)
 
 
 class ModInstallReview(ft.Column):

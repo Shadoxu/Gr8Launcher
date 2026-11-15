@@ -21,7 +21,7 @@
 
 ## Launcher preview
 
-![Gr8 Launcher home screen showing Minecraft profiles, a game banner, the launch button, and a 3D player skin preview](https://raw.githubusercontent.com/jaydeeppatil23/Gr8Launcher/launcher-preview/gr8-launcher-home.png)
+![Gr8 Launcher classic home screen showing top navigation, a game banner, profile cards, and the launch button](https://raw.githubusercontent.com/jaydeeppatil23/Gr8Launcher/launcher-preview/gr8-launcher-home.png)
 
 <p align="center"><em>Automatically captured from the latest successful main build with example profiles. Each release includes its own screenshot in the release notes. <a href="docs/screenshots/gr8-launcher-home.png">View the bundled preview.</a></em></p>
 
@@ -35,8 +35,8 @@
 | **Java and performance settings** | Choose a Java executable, adjust RAM within detected system limits, set profile JVM arguments, and configure game resolution, fullscreen, and launcher behavior. |
 | **Download progress and game logs** | Follow installation progress and download speed, cancel downloads, and inspect captured game output from the launcher. Windows launches avoid an extra Java console window. |
 | **Offline play** | Launch previously installed versions, reuse cached skin previews, and browse local profiles with automatic connection detection. |
-| **[Discord Rich Presence](docs/discord-presence.md)** | Show your current launcher page or the Minecraft version and mod loader you are playing, with your skin face, elapsed time, and an on/off switch in Settings. |
-| **Minecraft-inspired design** | Enjoy a dark blue and warm gold interface, pixel fonts, animated navigation, and a home-screen player model with optional cursor-following head movement. |
+| **[Discord Rich Presence](docs/discord-presence.md)** | Show your current launcher page or the Minecraft version and mod loader you are playing, with your skin face, elapsed time, and an on/off switch in Options > Launcher. |
+| **Minecraft-inspired design** | Use the original top tabs, Mojangles title, banner cards, and selectable Minecraft themes. Mods, modpacks, launcher updates, and notifications follow the selected theme. |
 
 ## Download Gr8 Launcher
 
@@ -89,7 +89,7 @@ python3 -m venv .venv
 
 1. Choose an **offline username** or sign in with an **Ely.by account**, the current account options.
 2. Select the latest release, or open **Library → New Profile** to choose a Minecraft version and mod loader.
-3. In **Settings → Java & Memory**, select the appropriate Java runtime and RAM allocation.
+3. In **Options > Java**, select the appropriate Java runtime and RAM allocation.
 4. Launch the profile. Keep an internet connection available for the first installation so game files, libraries, and assets can download.
 
 Existing official launcher profiles and locally discovered instances are imported automatically.
@@ -98,11 +98,11 @@ Existing official launcher profiles and locally discovered instances are importe
 
 ### Does Gr8 Launcher support Fabric, Forge, NeoForge, and Quilt?
 
-Yes. Choose the loader and a compatible Minecraft version when creating a profile. For mods, use the profile's **Open Game Folder** action and place compatible `.jar` files in its `mods` folder. The in-app **Mods manager is coming soon**.
+Yes. Choose the loader and a compatible Minecraft version when creating a profile. Open the **Mods** tab to manage installed mods, discover compatible downloads, or install a modpack. You can also place compatible `.jar` files in a profile's `mods` folder through **Open Game Folder**.
 
 ### How do custom Minecraft skins work?
 
-Sign in with an [Ely.by account](https://ely.by/), change your skin through Ely.by, and refresh the preview in the **Skins** tab. The launcher caches skins locally and includes a Java companion for applying them in-game. Offline username accounts use the default Steve/Alex skins.
+Sign in with an [Ely.by account](https://ely.by/), then choose a custom skin PNG or sync your Ely.by skin in the **Skins** tab. The launcher caches skins locally and includes a Java companion for applying them in-game. Offline username accounts use the default Steve/Alex skins.
 
 ### Can I play Minecraft offline?
 
@@ -137,7 +137,13 @@ Gr8Launcher/
 ├── credential_store.py    # Native credential storage and session fallback
 ├── skins.py               # Skin caching, rendering, and Java companion setup
 ├── skin_viewer.py         # Interactive player skin rendering and movement
-├── home_skin_viewer.py    # Home-screen player model and head tracking
+├── colors.py              # Original selectable Minecraft themes
+├── banners.py             # Cached and version-specific banner artwork
+├── ui_components.py       # Classic top navigation and shared controls
+├── ui_options.py          # Classic options and accounts
+├── ui_installations.py    # Profile editor
+├── ui_skins.py            # Classic skin preview and customization
+├── ui_legacy_features.py  # Current features in the classic layout
 ├── ui_profiles.py         # Profile cards and ordering
 ├── ui_dialogs.py          # Profile dialogs
 ├── ui_motion.py           # Navigation and entrance animations

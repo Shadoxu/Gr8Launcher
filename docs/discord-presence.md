@@ -1,7 +1,7 @@
 # Discord Rich Presence
 
 Gr8 Launcher uses Discord application `1559999125200568320`. Presence is enabled
-by default and can be turned off in **Settings → General → Discord Rich Presence**.
+by default and can be turned off in **Options > Launcher > Discord Presence**.
 The Discord desktop app must be running and allow activity sharing.
 
 Presence shows the current launcher page, installation or launch preparation,

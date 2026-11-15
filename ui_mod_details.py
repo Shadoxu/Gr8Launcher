@@ -35,8 +35,8 @@ BODY_FONT = "Segoe UI"
 SIDEBAR_WIDTH = 236
 
 
-def text(value: str, size=13, *, pixel=False, color=theme.TEXT_DETAIL, **kwargs) -> ft.Text:
-    return ft.Text(value, size=size, color=color, font_family="ps" if pixel else None, **kwargs)
+def text(value: str, size=13, *, pixel=False, color=None, **kwargs) -> ft.Text:
+    return ft.Text(value, size=size, color=theme.TEXT_DETAIL if color is None else color, font_family="ps" if pixel else None, **kwargs)
 
 
 def open_link(url: str) -> None:

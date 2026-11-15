@@ -1,13 +1,20 @@
-some details abt the theme/appearance of the launcher:
-use the shared variables in ui_theme.py for all UI colors. the colors below describe the default palette.
-this is a minimal minecraft launcher.
-the main colors are "#f5de9a"-primary(usually for texts or buttons) "#182842"-secondary(usually for bg).
-all elements are either sharp or have a simple rounded rectangle style having radius of 5px.
-usually there are no hover colors to the interactive elements.
-containers/spaces have no bg color for most of the time, but when they do, they use the black_26.
-dropdowns always have a black_26 background, 5px corners and a 48px height, with a gold label and chevron. use the shared AcrylicSelector so this is the default everywhere. menus open below the field at the same width and keep the existing navy acrylic blur. do not add an outline or hover fill by default. use one control per filter.
-animations are minimal which includes fade in and fade out simultaneously.
-there are no borders to elements except for some rare cases.
-the ui looks modern and clean.
-custom font "ps" for major elements(most of the time) and normal system font for other elements but making sure that it looks good.
-custom icons/assets(most of the time) if they are not there, user provides them. he will decide- use flet lib icons or custom.
+The launcher uses the restored classic interface from wisc-1.2.0.
+
+Keep its top navigation, Mojangles title, large home banner, library cards,
+compact profile rows, skin preview, and Options dashboard. The selected theme
+comes from colors.THEMES; Earth 2 is the default. Preserve the original rounded
+cards and their subtle borders, hover feedback, and selection highlights.
+
+Current mods, modpacks, updater dialogs, notifications, and progress inherit the
+selected classic palette through ui_theme.apply_legacy_theme. Keep their useful
+behavior integrated into the classic layout. The ps font alias also uses the
+bundled Mojangles font; use system fonts for dense details and retain licenses.
+
+Use AcrylicSelector for filters and LegacySelector for the classic forms.
+Closed fields are 48px high with 5px corners and theme-colored labels/chevrons.
+Menus remain acrylic, anchored below the field at the same width, with one
+control per filter. Keep keyboard access and selection feedback usable.
+
+Keep transitions brief and interruptible. Retain the shared dialog, toast,
+progress, scrolling, and drag-state handling. Check 1100x650 and larger windows;
+the title bar must remain usable and long pages must scroll.

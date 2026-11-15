@@ -41,8 +41,8 @@ SORT_OPTIONS = [("downloads", "Popular"), ("relevance", "Relevance"),
                 ("updated", "Recently updated"), ("newest", "Newest")]
 
 
-def _text(value: str, size: int = 13, *, pixel: bool = False, color: str = theme.MUTED, **kwargs) -> ft.Text:
-    return ft.Text(value, size=size, color=color, font_family="ps" if pixel else None, **kwargs)
+def _text(value: str, size: int = 13, *, pixel: bool = False, color: str | None = None, **kwargs) -> ft.Text:
+    return ft.Text(value, size=size, color=theme.MUTED if color is None else color, font_family="ps" if pixel else None, **kwargs)
 
 
 def _update(control: ft.Control) -> None:

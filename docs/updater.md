@@ -58,7 +58,7 @@ IS_PACKAGED: bool = getattr(sys, "frozen", False)
 - Automatic application replacement additionally requires Windows x64, a desktop session, a valid application root, and a supported installation record. Frozen detection alone does not authorize replacement of arbitrary directories.
 - **When running from source (`python main.py`):**
   - Self-updating and file replacement are **strictly disabled**.
-  - Settings / About tab displays: `Running from source (v<VERSION> - dev)`.
+  - Options / Updates page displays: `Running from source (v<VERSION> - dev)`.
   - Manual discovery remains available, but downloading executable updates and applying them are disabled. Enforce this in the service as well as the UI.
 - **Simulation / Mock Mode for UI testing:**
   - `GR8_UPDATE_MOCK=1` uses simulated release, progress, cancellation, and result records. It must never invoke setup, write to an installation, terminate real processes, or restart the system. Mock cache state is separate from real state.
@@ -122,7 +122,7 @@ GET https://api.github.com/repos/jaydeeppatil23/Gr8Launcher/releases/latest
 - **Frequency:**
   - Evaluate an automatic check asynchronously 5 seconds after UI startup. Fetch only if the preference is enabled, the last successful check is at least 6 hours old, and no backoff is active.
   - Periodic check interval: every 6 hours if the launcher remains open.
-  - Manual check button in Settings > About bypasses the time throttle while respecting backoff headers if rate-limited.
+  - Manual check button in Options > Updates bypasses the time throttle while respecting backoff headers if rate-limited.
 
 Use bounded connect/read timeouts. Honor `Retry-After` and rate-limit reset
 headers, with bounded backoff for transient failures. Do not run a tight retry
@@ -438,8 +438,8 @@ future incompatible migration needs a separate recovery design.
                            [Cleanup]    [Rollback / Repair]
 ```
 
-1. **Non-Intrusive Notifications:** Use the existing toast's single action button for View update or Restart now. Put Later in the dialog/banner; do not assume the shared toast supports two actions. Expired toasts leave update status accessible in Settings > About.
-2. **Settings > About Panel Integration:**
+1. **Non-Intrusive Notifications:** Use the existing toast's single action button for View update or Restart now. Put Later in the dialog/banner; do not assume the shared toast supports two actions. Expired toasts leave update status accessible in Options > Updates.
+2. **Options > Updates Panel Integration:**
    - Displays current version dynamically loaded from `VERSION`.
    - "Check for Updates" button with loading spinner and status feedback ("Checking...", "Up to date", "Update available: v2.4.0").
    - "What's New" release notes viewer using supported Markdown or text. Do not execute remote HTML; constrain link actions to opening validated web URLs.
@@ -499,7 +499,7 @@ backups; preserve existing credential storage and notification redaction.
    - Add focused local tests for semantic ordering, malformed/incomplete releases, missing current version, 304 without cache, backoff, cancellation, and checksum rejection.
 2. **Phase 2: UI & Settings Integration**
    - Replace hardcoded version in [`main.py`](../main.py#L5300) with dynamic version loader.
-   - Add update card, manual "Check for Updates" button, and status indicator in Settings > About.
+   - Add update card, manual "Check for Updates" button, and status indicator in Options > Updates.
    - Connect non-blocking startup check and `ToastHost` notifications.
    - Add safe developer guard (`IS_PACKAGED`) and mock mode toggle.
 3. **Phase 3: Helper Script & Packaging**

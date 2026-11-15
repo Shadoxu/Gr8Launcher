@@ -118,6 +118,8 @@ class ToastHost(ft.Container):
 
     def _build(self, message, kind, title, action_label=None, on_action=None):
         _, icon, color = self.TONES[kind]
+        if kind in ("info", "success"):
+            color = theme.ACCENT
         progress = ft.Container(
             width=0,
             height=3,

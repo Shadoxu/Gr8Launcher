@@ -1,6 +1,6 @@
 # Mods page
 
-The Mods sidebar entry has a content selector for **Mods** and
+The Mods top tab has a content selector for **Mods** and
 [**Modpacks**](modpacks.md). Mods opens a manager for one Minecraft profile. The Library's
 Manage Mods button opens the profile from that row. The Mods profile selection is
 independent of the profile selected for Play.
@@ -18,15 +18,15 @@ and [formatted content](screenshots/gr8-launcher-mods-details-content.png).
 
 ## Layout
 
-The custom title bar and left navigation stay visible. The content has 20 px left
+The custom title bar and top navigation stay visible. The content has 20 px left
 and 24 px right padding and fills the remaining window at 1100 × 650 or larger.
 
-1. **Header:** “Mods” in 32 px Pixelify Sans, with a compact frosted profile
+1. **Header:** “Mods” in 32 px Mojangles, with a compact frosted profile
    selector on the right. It shows the profile artwork/name and Minecraft version
    with its loader; build details stay in the selection page.
 2. **Profile selection:** the header selector opens a separate Library-style
    page using the shared profile rows, badges, build details, and scrollable
-   `ProfileList`. Select chooses the Mods target; Selected and a gold outline
+   `ProfileList`. Select chooses the Mods target; Selected and a theme-colored outline
    mark the current one.
    The compact chevron/Back control matches Add Account and keeps the current
    profile, query, filters, and scroll position.
@@ -103,9 +103,9 @@ and 24 px right padding and fills the remaining window at 1100 × 650 or larger.
   Disk scans and searches run during the entrance animation; their row updates
   wait for it to finish. Installed/Discover transitions animate a stable list
   body so filtering or refreshed metadata cannot reset the fade. The Mods page
-  stays mounted across sidebar navigation. Only visible rows and a small scroll
+  stays mounted across tab navigation. Only visible rows and a small scroll
   buffer are constructed, with spacers preserving the full scrollbar range.
-  Returning from a sidebar tab recreates the scroll viewport while retaining
+  Returning from a top tab recreates the scroll viewport while retaining
   the row cache and saved position. Events from an old viewport are ignored;
   background identity changes wait until the entrance has finished.
   Row changes are sent together with page feedback.
@@ -190,7 +190,7 @@ and 24 px right padding and fills the remaining window at 1100 × 650 or larger.
   The release dropdown is the only release filter: Stable by default, All releases,
   Beta, or Alpha. Changing it resets version pagination and keeps the selected
   option across navigation. Shared selectors have a dark background and 5 px
-  corners by default, including the Versions filter and Settings selectors.
+  corners by default, including the Versions filter and Options selectors.
 - Selecting another installed provider version shows the exact replacement and
   required dependencies before confirmation. A successful replacement retains the
   previous JAR in launcher trash and preserves the mod's enabled state. A failed

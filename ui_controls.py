@@ -238,3 +238,55 @@ class AcrylicSelector(ft.PopupMenuButton):
     def _select(self, value: str, e) -> None:
         self.refresh_options(self.options, value)
         self._choose(e)
+
+
+class LegacySelector(ft.Container):
+    """Original form-field API backed by the launcher's shared acrylic selector."""
+
+    def __init__(self, *, label=None, value=None, options=None, on_select=None,
+                 width=None, expand=None, visible=True, disabled=False, **kwargs):
+        self._value = value
+        self._options = options or []
+        self.on_select = on_select
+        self.selector = AcrylicSelector(self._pairs(), value, self._selected,
+                                        width=width or (456 if expand else 280), hint=label or "Choose",
+                                        prefix=label, tooltip=kwargs.get("tooltip"))
+        super().__init__(content=self.selector, width=width, expand=expand,
+                         visible=visible, disabled=disabled, on_size_change=self._resize)
+
+    def _pairs(self) -> list[tuple[str, str]]:
+        return [(str(option.key or option.text), str(option.text or option.key)) for option in self._options]
+
+    @property
+    def options(self):
+        return self._options
+
+    @options.setter
+    def options(self, options):
+        self._options = options
+        if hasattr(self, "selector"):
+            self.selector.refresh_options(self._pairs(), self._value)
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        self._value = value
+        if hasattr(self, "selector"):
+            self.selector.refresh_options(self._pairs(), value)
+
+    def _selected(self, event):
+        from types import SimpleNamespace
+
+        self._value = self.selector.value
+        if self.on_select:
+            self.on_select(SimpleNamespace(control=self, data=self.value, page=getattr(event, "page", None)))
+
+    def _resize(self, event):
+        if event.width and abs(self.selector.width - event.width) > 1:
+            self.selector.width = event.width
+            self.selector.size_constraints = ft.BoxConstraints(min_width=event.width, max_width=event.width)
+            self.selector.refresh_options(self._pairs(), self._value)
+            self.selector.update()

@@ -85,6 +85,7 @@ PENDING_INSTALLATIONS_FILE = DATA_DIR / "pending_installations.json"
 ACCOUNT_PICTURES_DIR = get_account_pictures_dir()
 ACCOUNTS_FILE = DATA_DIR / "accounts.json"
 LAUNCHER_PROFILES_CACHE_FILE = DATA_DIR / "launcher_profiles_cache.json"
+THEME_FILE = DATA_DIR / "theme.txt"
 
 DEFAULT_SETTINGS: dict[str, object] = {
     "ram_mb": 4096,
@@ -158,6 +159,29 @@ def save_settings(settings: dict[str, object]) -> bool:
             temporary_file.unlink(missing_ok=True)
         except OSError:
             pass
+        return False
+    return True
+
+
+def load_theme_choice(available_themes: list[str]) -> str:
+    """Restore the original theme preference without changing other settings."""
+    from colors import DEFAULT_THEME
+
+    fallback = DEFAULT_THEME if DEFAULT_THEME in available_themes else available_themes[0]
+    try:
+        selected = THEME_FILE.read_text(encoding="utf-8").strip()
+    except (OSError, UnicodeError):
+        return fallback
+    return selected if selected in available_themes else fallback
+
+
+def save_theme_choice(theme_name: str) -> bool:
+    temporary = THEME_FILE.with_suffix(".tmp")
+    try:
+        temporary.write_text(theme_name, encoding="utf-8")
+        temporary.replace(THEME_FILE)
+    except OSError:
+        temporary.unlink(missing_ok=True)
         return False
     return True
 
@@ -741,6 +765,20 @@ def remove_account(account_id: str) -> bool:
                 )
                 break
     return success
+
+
+@_account_transaction
+def update_offline_username(username: str) -> bool:
+    """Rename the selected offline account using the existing account transaction."""
+    import re
+
+    clean_name = username.strip()
+    if not re.fullmatch(r"[A-Za-z0-9_]{1,16}", clean_name):
+        return False
+    account = get_active_account()
+    if account.get("type") != "offline":
+        return False
+    return add_or_update_account({**account, "username": clean_name})
 
 
 @_account_transaction

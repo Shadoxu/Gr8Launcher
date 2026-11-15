@@ -82,3 +82,27 @@ LOADER_OTHER = "#b0bec5"
 # Alpha masks control visibility rather than the visible theme palette.
 MASK_OPAQUE = "#ffffffff"
 MASK_TRANSPARENT = "#00ffffff"
+
+
+def apply_legacy_theme(palette: dict[str, str]) -> None:
+    """Make retained feature controls follow the original launcher's theme."""
+    values = {
+        "BACKGROUND": palette["bg"], "ACCENT": palette["btn_primary"],
+        "GLOW": palette["card_hover"], "TEXT": palette["text_primary"],
+        "ON_ACCENT": palette["btn_primary_text"], "MUTED": palette["text_secondary"],
+        "NAV_MUTED": palette["text_muted"], "SURFACE": palette["surface"],
+        "SURFACE_STRONG": palette["card"], "TOAST_BACKGROUND": palette["card"],
+        "CODE_BACKGROUND": palette["surface"], "QUOTE_BACKGROUND": palette["card"],
+        "AUTH_INACTIVE": palette["surface"], "SWITCH_TRACK": palette["border"],
+        "SWITCH_INACTIVE_TRACK": palette["surface"], "SWITCH_ACTIVE_TRACK": palette["btn_primary"],
+        "ICON_MUTED": palette["text_secondary"], "ICON_CLOSE": palette["text_secondary"],
+    }
+    values.update({name: palette["text_primary"] for name in (
+        "TEXT_HEADING", "TEXT_DETAIL", "TEXT_STATUS", "TEXT_CODE", "TEXT_UPDATE", "TEXT_LOG",
+    )})
+    values.update({name: palette["text_secondary"] for name in (
+        "TEXT_SECONDARY", "TEXT_SUPPORT", "TEXT_PLACEHOLDER", "TEXT_CAPTION", "TEXT_FOOTNOTE",
+    )})
+    values["TEXT_DIM"] = ft.Colors.with_opacity(0.70, palette["text_primary"])
+    values["TEXT_HINT"] = ft.Colors.with_opacity(0.24, palette["text_primary"])
+    globals().update(values)

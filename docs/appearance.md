@@ -1,36 +1,24 @@
-# Trying launcher palettes
+# Launcher themes
 
-The launcher's colors live in `ui_theme.py`. Edit the variables there, then
-fully close and restart `python main.py` to see the new palette.
+Choose a Minecraft theme in **Options > UI > Theme Selection**. Earth 2 is the
+default; Redstone, Sculk, Gold, Lush, Amethyst, Cherry Blossom, and Earth 1 are
+also available. The choice is saved and applies immediately when the launcher
+is idle. Finish active installations or mod operations before switching themes.
 
-Start with these main variables:
+The original top navigation, home banner, library cards, and Mojangles title
+are restored. Mods, modpacks, notifications, progress, and update dialogs follow
+the same selected palette.
 
-| Variable | Controls |
+To customize a palette from source, edit its entry in `colors.THEMES`:
+
+| Theme token | Controls |
 | --- | --- |
-| `BACKGROUND` | Page background, dialogs, menus, and related surface shades |
-| `ACCENT` | Primary buttons, headings, selected navigation icons, and progress |
-| `GLOW` | Roaming background glow and selected card highlights |
-| `TEXT` | Main body text, input text, and the skin hover outline |
-| `ON_ACCENT` | Text and icons on accent buttons; follows `BACKGROUND` by default |
-| `MUTED` / `NAV_MUTED` | Secondary details and inactive navigation |
+| `bg`, `surface`, `card`, `card_hover` | Page and card backgrounds |
+| `btn_primary`, `btn_primary_text` | Primary buttons, selection, and progress |
+| `text_primary`, `text_secondary`, `text_muted` | Text and icons |
+| `border` | Card and input boundaries |
 
-Use six-digit RGB hex colors for `BACKGROUND`, `ACCENT`, and `TEXT`. The derived
-shades and translucent text depend on those values. For example, try replacing
-the main background and accent with deep purple and pale lime:
-
-```python
-BACKGROUND = "#291c3d"
-ACCENT = "#e5f2a5"
-```
-
-The remaining variables expose individual text, surface, notification, status,
-and loader-badge colors. You can override a derived shade with a hex color if
-you want to tune it separately. Keep error and warning colors distinct and
-check text on both the page background and acrylic surfaces.
-
-Bundled navigation and fallback UI icons follow the palette through tinting.
-Minecraft artwork, skins, the brand logo, and illustrated promotional images
-retain their original colors.
-
-Palette changes apply on startup. There is no theme chooser or automatic live
-reload in this change.
+`ui_theme.apply_legacy_theme` maps these tokens to the retained feature controls.
+Error, warning, and loader colors keep their separate meanings. Minecraft art
+and skins retain their original colors. Font files and licenses remain bundled
+under `.assets/font/` and `.assets/fonts/`.

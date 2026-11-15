@@ -2,12 +2,78 @@
 
 import json
 import queue
+import shutil
 import socket
 import threading
 import time
 from pathlib import Path
 
 from credential_store import redact_credentials
+
+
+def remove_profile_record(profile_id: str, *, delete_files: bool = False) -> dict:
+    """Remove a profile, preserving game files unless its own folder is selected."""
+    import storage
+    from launcher import minecraft_directory, get_profile_game_directory, delete_external_profile
+    from profile_creation import folder_is_referenced
+
+    profiles = storage.load_installations()
+    profile = next((item for item in profiles if item["id"] == profile_id), None)
+    if profile is None:
+        raise ValueError("This profile no longer exists.")
+    folder = None
+    if delete_files:
+        if not profile.get("is_instance"):
+            raise ValueError("Shared Minecraft files cannot be deleted with a profile.")
+        folder = get_profile_game_directory(profile)
+        root = (Path(minecraft_directory) / "instances").resolve()
+        original = Path(profile.get("game_directory") or root / profile.get("instance_name", ""))
+        linked = original.is_symlink() or (hasattr(original, "is_junction") and original.is_junction())
+        if linked:
+            raise ValueError("Linked instance folders must be removed manually.")
+        if folder.parent != root or folder_is_referenced(folder, profiles, minecraft_directory, exclude_id=profile_id):
+            raise ValueError("Only this profile's own, unshared instance folder can be deleted.")
+    original_handled = storage.load_handled_external_profile_ids()
+    handled = original_handled.copy()
+    external_id = str(profile.get("external_profile_id") or "")
+    if external_id:
+        handled.add(external_id)
+    remaining = [item for item in profiles if item["id"] != profile_id]
+    if not storage.save_installations(remaining, handled):
+        raise OSError("Could not save profile changes. The game files were preserved.")
+    if folder and folder.is_dir():
+        try:
+            shutil.rmtree(folder)
+        except OSError as error:
+            # Preserve the profile as well as the remaining files if cleanup fails.
+            storage.save_installations(profiles, original_handled)
+            raise OSError("Could not remove all instance files. The profile was restored.") from error
+    if external_id:
+        delete_external_profile(external_id)
+    return profile
+
+
+def remove_installed_version(version_id: str) -> bool:
+    """Remove only the selected runtime's files inside Minecraft's versions folder."""
+    from launcher import minecraft_directory, invalidate_installed_versions_cache
+
+    if (not version_id or version_id in (".", "..") or version_id.rstrip(". ") != version_id
+            or Path(version_id).name != version_id or any(char in version_id for char in '/\\:')):
+        return False
+    root = (Path(minecraft_directory) / "versions").resolve()
+    paths = [root / version_id, root / f"{version_id}.json", root / f"{version_id}.jar"]
+    try:
+        if any(path.resolve().parent != root or path.is_symlink() for path in paths):
+            return False
+        for path in paths:
+            if path.is_dir():
+                shutil.rmtree(path)
+            else:
+                path.unlink(missing_ok=True)
+    except OSError:
+        return False
+    invalidate_installed_versions_cache()
+    return True
 
 
 def check_internet_connection(timeout=2.0):

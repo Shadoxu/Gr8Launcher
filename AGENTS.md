@@ -16,14 +16,14 @@ Run from the repository root in a virtual environment. Source supports Python 3.
 
 ## Launcher Design Language
 
-Follow `design_theme.txt` and existing components:
+Follow `design_theme.txt` and the restored classic components:
 
-- **Palette:** navy `#182842`, warm gold/beige `#f5de9a`, subtle ambient glow `#454641`; transparent/acrylic or `ft.Colors.BLACK_26` surfaces.
-- **Typography/assets:** use `ps` (Pixelify Sans) for primary UI, system fonts for dense details. Reuse Minecraft artwork/icons and retain font licenses.
-- **Shape:** prefer sharp edges or 5px rounded rectangles. Match existing frosted profile, dialog, and toast surfaces; keep borders and hover fills rare while preserving selection/focus feedback.
-- **Dropdowns:** use the shared `AcrylicSelector`. Closed fields have a `ft.Colors.BLACK_26` background, 5px corners, 48px height, and a gold label/chevron. Keep popup menus acrylic and anchored to the field width, with no added hover fill or default outline. Use one control for each filter.
-- **Layout:** retain left navigation, the custom title bar, banner/skin preview, and compact profile rows. Check 1100x650 and larger windows; keep content scrollable and window controls usable.
-- **Motion/feedback:** reuse `StaggeredReveal`, `ProfileDialogHost`, `ProfileList`, and `ToastHost`. Keep transitions brief (180-320ms) and interruptible. Restore state after navigation/canceled drags; use concise labels and meaningful loading/error feedback.
+- **Palette:** selectable Minecraft themes in `colors.py`, defaulting to Earth 2. Use the selected theme's background, surface, text, and button tokens. Retained feature pages inherit these through `ui_theme.apply_legacy_theme`.
+- **Typography/assets:** keep the original Mojangles title and existing Minecraft artwork. Its font and license live in `.assets/font/`; retain all bundled font licenses. Use system fonts for dense details.
+- **Shape:** preserve the original rounded banner, library cards, compact profile rows, and options cards. Keep selection and focus feedback visible.
+- **Dropdowns:** use `AcrylicSelector`, or the `LegacySelector` adapter for classic forms. Menus stay anchored to the field width, with 48px closed fields, 5px corners, and theme-colored labels/chevrons. Use one control per filter.
+- **Layout:** retain the original top navigation, custom window controls, home banner, and library shelf. Keep Mods & Modpacks and Options > Updates accessible. Check 1100x650 and larger windows; keep content scrollable and window controls usable.
+- **Motion/feedback:** keep the classic tab transitions and reuse `StaggeredReveal`, `ProfileDialogHost`, `ProfileList`, `ProgressHost`, and `ToastHost` for retained features. Keep transitions interruptible, restore state after navigation/canceled drags, and provide concise loading/error feedback.
 
 ## Coding Style & Naming Conventions
 

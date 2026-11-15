@@ -25,8 +25,8 @@ from ui_modpacks import CONTENT_OPTIONS, ModpacksPage
 from ui_progress import ProgressHost, ProgressTask, track_progress
 
 
-def _text(value: str, size: int = 13, *, color: str = theme.MUTED, pixel: bool = False, **kwargs) -> ft.Text:
-    return ft.Text(value, size=size, color=color, font_family="ps" if pixel else None, **kwargs)
+def _text(value: str, size: int = 13, *, color: str | None = None, pixel: bool = False, **kwargs) -> ft.Text:
+    return ft.Text(value, size=size, color=theme.MUTED if color is None else color, font_family="ps" if pixel else None, **kwargs)
 
 
 def _button(label: str, on_click: Callable, *, primary: bool = False, **kwargs) -> ft.Button:

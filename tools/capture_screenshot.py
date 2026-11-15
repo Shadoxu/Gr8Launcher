@@ -41,7 +41,7 @@ def find_browser(explicit: str | None) -> Path:
     raise RuntimeError("Install Edge or Chrome, or pass --browser PATH.")
 
 
-def serve_preview(directory: Path, port: int) -> None:
+def serve_preview(directory: Path, port: int, route: str = "home") -> None:
     source = directory / "source"
     source.mkdir()
     for module in PROJECT_ROOT.glob("*.py"):
@@ -77,6 +77,9 @@ def serve_preview(directory: Path, port: int) -> None:
          "game_directory": str(minecraft_root / "instances" / "Fabric Adventure"),
          "icon": "icon_blocks/diamond_ore.png"},
     ]
+    for profile in profiles:
+        profile["is_instance"] = True
+        Path(profile["game_directory"]).mkdir(parents=True)
     if not storage.save_installations(profiles, latest_release_id="1.21.4"):
         raise RuntimeError("Could not create screenshot profiles.")
     if not storage.save_settings({**storage.DEFAULT_SETTINGS, "discord_rpc": False,
@@ -90,7 +93,19 @@ def serve_preview(directory: Path, port: int) -> None:
     os.chdir(source / ".assets")
     launcher_ui.ASSETS_DIR = Path(".")
     launcher_ui.get_latest_release_version = lambda: ("1.21.4", True)
+    launcher_ui.get_version_catalog = lambda: (
+        [{"id": "1.21.4", "type": "release"}, {"id": "1.21.1", "type": "release"}], "1.21.4", True)
     launcher_ui.check_internet_connection = lambda *args, **kwargs: True
+    import launcher_services
+    launcher_services.check_internet_connection = lambda *args, **kwargs: True
+    import banners
+    banners.get_local_banner_for_target = lambda target, *args: str(Path("banners") / (
+        "portal.png" if str((target or {}).get("loader", "Vanilla")).casefold() != "vanilla" else "farmhouse.png"))
+
+    async def fixture_banner(target, *args):
+        return banners.get_local_banner_for_target(target)
+
+    banners.ensure_banner_for_target = fixture_banner
     random.seed(0)
 
     def preview(page):
@@ -99,6 +114,10 @@ def serve_preview(directory: Path, port: int) -> None:
         async def ready():
             # Wait for the launcher's entrance animations before checking paint.
             await asyncio.sleep(2)
+            if route != "home":
+                import state
+                state.navigation_state["navigate"](route)
+                await asyncio.sleep(1)
             (directory / "ready").write_text("ready", encoding="utf-8")
         page.run_task(ready)
 
@@ -146,7 +165,7 @@ def validate_screenshot(data: bytes) -> None:
                 raise RuntimeError("The screenshot contains an unrendered launcher panel.")
 
 
-def capture(output: Path, browser: Path) -> None:
+def capture(output: Path, browser: Path, *, route: str = "home") -> None:
     from websockets.sync.client import connect
     temporary_root = (PROJECT_ROOT / "temp").resolve()
     if not temporary_root.is_relative_to(PROJECT_ROOT):
@@ -166,6 +185,7 @@ def capture(output: Path, browser: Path) -> None:
             server = subprocess.Popen([
                 sys.executable, str(Path(__file__).resolve()), "--serve", str(directory),
                 "--port", str(port),
+                "--route", route,
             ], stdout=log, stderr=log, **process_options)
             try:
                 deadline = time.monotonic() + 75
@@ -208,9 +228,18 @@ def capture(output: Path, browser: Path) -> None:
                             document.querySelector('flt-semantics-placeholder')?.click();
                             return document.body?.innerText || '';
                         })()""") or ""
-                        if (directory / "ready").is_file() and all(
-                            label in labels for label in ("Survival", "Fabric Adventure", "PLAY")
-                        ):
+                        expected = {
+                            "home": ("Survival", "Fabric Adventure", "PLAY"),
+                            "installations": ("Survival", "Fabric Adventure", "New Profile"),
+                            "mods": ("Mods", "Installed", "Discover"),
+                            "skins": ("Skins Disabled",),
+                            "options": ("Java", "Accounts", "Updates"),
+                            "options_updates": ("Launcher Updates", "Check for Updates"),
+                            "options_accounts": ("Manage Accounts", "Player"),
+                            "options_about": ("About", "Gr8 Launcher"),
+                            "new_installation": ("New Profile", "Save Profile"),
+                        }[route]
+                        if (directory / "ready").is_file() and all(label in labels for label in expected):
                             break
                         if devtools.errors or time.monotonic() > deadline:
                             raise RuntimeError(f"Launcher did not render: {labels[:500]} {devtools.errors}")
@@ -222,7 +251,14 @@ def capture(output: Path, browser: Path) -> None:
                     if devtools.errors:
                         raise RuntimeError(f"Browser rendering errors: {devtools.errors}")
                     data = base64.b64decode(screenshot["data"])
-                    validate_screenshot(data)
+                    if route == "home":
+                        validate_screenshot(data)
+                    else:
+                        from PIL import Image, ImageStat
+                        with Image.open(io.BytesIO(data)) as picture:
+                            deviation = ImageStat.Stat(picture.crop((20, 80, WIDTH - 20, HEIGHT - 20)).convert("RGB")).stddev
+                            if picture.size != (WIDTH, HEIGHT) or max(deviation) < 12:
+                                raise RuntimeError("The requested launcher page did not render.")
                     output.parent.mkdir(parents=True, exist_ok=True)
                     output.write_bytes(data)
                     devtools.call("Browser.close")
@@ -251,11 +287,18 @@ def main() -> None:
     parser.add_argument("--checksum-file", type=Path, help="Add the PNG to an existing SHA256SUMS.txt")
     parser.add_argument("--serve", type=Path, help=argparse.SUPPRESS)
     parser.add_argument("--port", type=int, help=argparse.SUPPRESS)
+    parser.add_argument("--route", default="home", choices=("home", "installations", "mods", "skins", "options",
+                        "options_updates", "options_accounts", "options_about", "new_installation"),
+                        help="Launcher page to capture using isolated sample data")
+    parser.add_argument("--width", type=int, default=1100)
+    parser.add_argument("--height", type=int, default=650)
     args = parser.parse_args()
+    global WIDTH, HEIGHT
+    WIDTH, HEIGHT = args.width, args.height
     if args.serve:
-        serve_preview(args.serve.resolve(), args.port)
+        serve_preview(args.serve.resolve(), args.port, args.route)
         return
-    capture(args.output.resolve(), find_browser(args.browser))
+    capture(args.output.resolve(), find_browser(args.browser), route=args.route)
     if args.checksum_file:
         lines = args.checksum_file.read_text(encoding="utf-8").splitlines()
         lines = [line for line in lines if line.split("  ", 1)[-1] != args.output.name]
