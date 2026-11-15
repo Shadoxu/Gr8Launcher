@@ -370,8 +370,9 @@ def build_skins_view(page: ft.Page, theme: dict, notify, open_url=None, online_a
         notify("Checking for updated skin...", ft.Icons.REFRESH)
         page.run_task(sync_skin_network, True)
 
-    file_picker = ft.FilePicker()
-    page.services.append(file_picker)
+    file_picker = features.file_picker if features else ft.FilePicker()
+    if not features:
+        page.services.append(file_picker)
 
     async def choose_custom_skin(e):
         files = await file_picker.pick_files(allow_multiple=False, allowed_extensions=['png'], file_type=ft.FilePickerFileType.CUSTOM)

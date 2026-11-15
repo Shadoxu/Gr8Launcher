@@ -18,24 +18,25 @@ and [formatted content](screenshots/gr8-launcher-mods-details-content.png).
 
 ## Layout
 
-The custom title bar and top navigation stay visible. The content has 20 px left
-and 24 px right padding and fills the remaining window at 1100 × 650 or larger.
+The custom title bar and top navigation stay visible. The content has the classic
+28 px horizontal and 20 px top padding and fills the remaining window at
+1100 × 650 or larger.
 
-1. **Header:** “Mods” in 32 px Mojangles, with a compact frosted profile
+1. **Header:** “Mods” in the classic 24 px system-font heading, with a compact rounded profile
    selector on the right. It shows the profile artwork/name and Minecraft version
    with its loader; build details stay in the selection page.
 2. **Profile selection:** the header selector opens a separate Library-style
    page using the shared profile rows, badges, build details, and scrollable
    `ProfileList`. Select chooses the Mods target; Selected and a theme-colored outline
    mark the current one.
-   The compact chevron/Back control matches Add Account and keeps the current
+   The compact arrow/Back control matches Options and keeps the current
    profile, query, filters, and scroll position.
 3. **Content:** the header's acrylic selector switches between Mods and Modpacks.
    Pack browsing works without choosing a profile; installing a pack creates its
    own instance with pinned Minecraft and loader versions.
    **Tabs:** Discover and Installed with its mod count. Discover shows a quiet
    attribution label for the selected provider, Modrinth or CurseForge.
-4. **Toolbar:** the shared `SimpleInput` at its normal intrinsic height, with no
+4. **Toolbar:** the shared `SimpleInput` search field at its standard 48 px height, with no
    Mods-specific height or padding overrides, 5 px corners, and a mode-specific
    search hint; All/Enabled/Disabled, Add JARs, and Refresh for
    Installed, or source and sort selectors for Discover, initially Modrinth and
@@ -52,8 +53,8 @@ and 24 px right padding and fills the remaining window at 1100 × 650 or larger.
    dependencies. The page shows a compatible
    result count in Discover or enabled/disabled counts in Installed. The header
    provides the profile's version/loader context.
-6. **Scrollable rows:** the existing `ProfileList` and frosted 5 px profile surface
-   with 48 px artwork, 16 px horizontal padding, and muted supporting text.
+6. **Scrollable rows:** the existing list controls and matte 12 px profile surface
+   with 48 px artwork, 16 px horizontal padding, system-font titles, and muted supporting text.
    Installed rows show name, description when available, version, size,
    enable switch, and removal. The filename remains available in details and search.
    Clicking the artwork/title area

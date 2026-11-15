@@ -38,6 +38,8 @@ import flet as ft
 from ui_controls import LegacySelector
 import ui_theme
 from ui_legacy_features import LegacyFeatures, load_ui_installations as load_installations
+from ui_library import ClassicLibraryPage
+from ui_profile_assets import profile_badges as build_profile_badges, profile_summary
 from credential_store import redact_credentials
 from launcher_services import check_internet_connection, read_game_output
 from launcher_services import installation_sources_stamp, sync_local_installations, remove_installed_version, remove_profile_record
@@ -173,6 +175,7 @@ def main(page: ft.Page):
     page.horizontal_alignment = ft.CrossAxisAlignment.STRETCH
     page.padding = 0
     page.spacing = 0
+    page.theme_mode = ft.ThemeMode.DARK
 
     page.window.prevent_close = False
     page.window.title_bar_hidden = True
@@ -213,6 +216,19 @@ def main(page: ft.Page):
             latest_release_id = latest
             storage.save_installations(storage.load_installations(), latest_release_id=latest)
         return online
+
+    def get_latest_release_profile() -> dict:
+        version_id = latest_release_id or ""
+        return {
+            "id": LATEST_RELEASE_PROFILE_ID,
+            "key": LATEST_RELEASE_PROFILE_ID,
+            "name": "Latest Release",
+            "loader": "Vanilla",
+            "minecraft_version": version_id,
+            "loader_version": "",
+            "version_id": version_id,
+            **storage.load_latest_release_options(),
+        }
 
     def get_account_avatar_bytes(account, scale=1):
         avatar = state.launcher_log_state.get('get_head_avatar')
@@ -713,7 +729,15 @@ def main(page: ft.Page):
 
     def build_page(theme_select, tab="home"):
         theme = get_theme(theme_select)
+        if features.library:
+            features.library.leave()
+            features.library = None
         features.apply_theme(theme)
+        page.theme = ft.Theme(
+            font_family="Segoe UI", color_scheme_seed=theme["btn_primary"],
+            color_scheme=ft.ColorScheme(primary=theme["btn_primary"], on_primary=theme["btn_primary_text"],
+                                       surface=theme["surface"], on_surface=theme["text_primary"], outline=theme["border"]),
+        )
         page.bgcolor = get_pagecolor()
         clickable_mouse_cursor = {
             ft.ControlState.DISABLED: ft.MouseCursor.BASIC,
@@ -1088,6 +1112,24 @@ def main(page: ft.Page):
             page_content.animate_opacity = ft.Animation(160, ft.AnimationCurve.EASE_IN)
             page_content.opacity = 1
             page.update()
+            if name == "mods":
+                features.reveal.show(content, features.mods.reveal_controls)
+                features.mods.start_loading()
+
+        def show_page(name, content):
+            nonlocal current_page, transition_id, tab
+            if page_content.content is None:
+                page_content.content = content
+                current_page = name
+                tab = name if name in tab_names else "options" if name.startswith("options") else "installations"
+                tabs_buttons.selected_index = tab_names.index(tab)
+                page.update()
+                if name == "mods":
+                    features.mods.start_loading()
+                return
+            transition_id += 1
+            current_page = name
+            page.run_task(transition_page, name, content, transition_id)
 
         loader_catalog_cache = {}
 
@@ -1248,22 +1290,27 @@ def main(page: ft.Page):
                 online_available=online_available,
                 show_dialog_with_blur=show_dialog_with_blur,
                 close_dialog_with_blur=close_dialog_with_blur,
+                features=features,
             )
         def navigate(name, profile_id=None, force=False):
             nonlocal current_page, transition_id, tab, handled_external_profile_ids
+            if name == "profiles":
+                name = "options_accounts"
+            if current_page == name and active_page.get("profile_id") == profile_id and not force:
+                return
             if features.busy and name in ("new_installation", "edit_installation", "configure_installed"):
                 notify("Wait for the current operation to finish.", "warning")
                 return
-            features.enter(name, profile_id)
             installations[:] = load_installations()
             settings.update(load_settings())
-            if name == "profiles":
-                name = "options_accounts"
             if name == "edit_installation":
                 profile = next(
                     (item for item in installations if item["id"] == profile_id),
                     None,
                 )
+                if profile is None:
+                    notify("This profile is no longer available.", "warning")
+                    return
                 if profile and is_active_launch_version(
                     get_profile_version_id(profile), profile_id
                 ):
@@ -1274,6 +1321,12 @@ def main(page: ft.Page):
                 return
             active_page["name"] = name
             active_page["profile_id"] = profile_id
+            features.enter(name, profile_id, defer_load=name == "mods")
+            if name == "mods":
+                # Retained pages own their state. Do not rebuild the Home
+                # launch controls while a different page is being mounted.
+                show_page(name, features.mods)
+                return
 
             installed_versions = get_installed_versions(force_refresh=force or name in ("home", "installations"))
             if force or name in ("home", "installations"):
@@ -1298,92 +1351,6 @@ def main(page: ft.Page):
                         handled_external_profile_ids,
                         latest_release_id,
                     )
-
-            def profile_summary(installation):
-                summary = (
-                    f"{installation.get('loader', 'Vanilla')} | "
-                    f"{installation.get('minecraft_version', 'Unknown version')}"
-                )
-                if installation.get("loader") != "Vanilla" and installation.get(
-                    "loader_version"
-                ):
-                    summary += f" | {installation['loader_version']}"
-                elif installation.get("channel"):
-                    summary += f" | {installation['channel']}"
-                if installation.get("is_instance"):
-                    summary += f" • Instance: {installation.get('instance_name', 'Custom')}"
-                return summary
-
-            def build_profile_badges(target):
-                loader = target.get("loader", "Vanilla")
-                is_inst = bool(target.get("is_instance"))
-                if loader == "Fabric":
-                    loader_bg = ft.Colors.with_opacity(0.18, ft.Colors.BLUE_400)
-                    loader_color = ft.Colors.BLUE_300
-                elif loader == "Forge":
-                    loader_bg = ft.Colors.with_opacity(0.18, ft.Colors.ORANGE_400)
-                    loader_color = ft.Colors.ORANGE_300
-                elif loader == "OptiFine":
-                    loader_bg = ft.Colors.with_opacity(0.18, ft.Colors.PURPLE_400)
-                    loader_color = ft.Colors.PURPLE_300
-                elif loader == "NeoForge":
-                    loader_bg = ft.Colors.with_opacity(0.18, ft.Colors.ORANGE_300)
-                    loader_color = ft.Colors.ORANGE_200
-                elif loader == "Quilt":
-                    loader_bg = ft.Colors.with_opacity(0.18, ft.Colors.PURPLE_300)
-                    loader_color = ft.Colors.PURPLE_200
-                else:
-                    loader_bg = ft.Colors.with_opacity(0.15, theme["surface"])
-                    loader_color = theme["text_secondary"]
-
-                mc_ver = str(target.get("minecraft_version") or target.get("version_id") or "").strip()
-                if mc_ver.lower() == "latest-release":
-                    mc_ver = "Release"
-
-                badges = []
-                if mc_ver:
-                    badges.append(
-                        ft.Container(
-                            content=ft.Text(
-                                mc_ver,
-                                size=10,
-                                weight=ft.FontWeight.W_600,
-                                color=theme["btn_primary"],
-                            ),
-                            bgcolor=ft.Colors.with_opacity(0.14, theme["btn_primary"]),
-                            padding=ft.Padding.symmetric(horizontal=7, vertical=2),
-                            border_radius=5,
-                        )
-                    )
-                if loader != "Vanilla":
-                    badges.append(
-                        ft.Container(
-                            content=ft.Text(
-                                loader,
-                                size=10,
-                                weight=ft.FontWeight.W_600,
-                                color=loader_color,
-                            ),
-                            bgcolor=loader_bg,
-                            padding=ft.Padding.symmetric(horizontal=7, vertical=2),
-                            border_radius=5,
-                        )
-                    )
-                if is_inst:
-                    badges.append(
-                        ft.Container(
-                            content=ft.Text(
-                                "Instance",
-                                size=10,
-                                weight=ft.FontWeight.W_600,
-                                color=theme["btn_primary"],
-                            ),
-                            bgcolor=ft.Colors.with_opacity(0.14, theme["btn_primary"]),
-                            padding=ft.Padding.symmetric(horizontal=7, vertical=2),
-                            border_radius=5,
-                        )
-                    )
-                return badges
 
             def open_game_folder(folder_path):
                 try:
@@ -1416,23 +1383,6 @@ def main(page: ft.Page):
             local_version_ids = {
                 version["version_id"] for version in installed_versions
             }
-            pending_profiles = [
-                profile
-                for profile in installations
-                if get_profile_version_id(profile) not in local_version_ids
-            ]
-
-            def profile_menu(profile):
-                return ft.PopupMenuButton(icon=ft.Icons.MORE_HORIZ,
-                    icon_color=theme['text_secondary'], disabled=features.busy,
-                    items=[
-                        ft.PopupMenuItem(content=ft.Text('Move up'), on_click=lambda e: features.move_profile(profile['id'], -1)),
-                        ft.PopupMenuItem(content=ft.Text('Move down'), on_click=lambda e: features.move_profile(profile['id'], 1)),
-                        ft.PopupMenuItem(content=ft.Text('Manage mods'), on_click=lambda e: navigate('mods', profile['id'])),
-                        ft.PopupMenuItem(content=ft.Text('Repair Minecraft files'),
-                            on_click=lambda e: page.run_task(features.repair_profile, profile)),
-                    ])
-
             def confirm_delete(profile_id):
                 profile = next((item for item in installations if item['id'] == profile_id), None)
                 if profile is None or features.busy:
@@ -1612,16 +1562,7 @@ def main(page: ft.Page):
 
             launch_targets = {}
             if latest_release_id:
-                launch_targets["latest-release"] = {
-                    "id": LATEST_RELEASE_PROFILE_ID,
-                    "key": "latest-release",
-                    "name": "Latest Release",
-                    "loader": "Vanilla",
-                    "minecraft_version": latest_release_id,
-                    "loader_version": "",
-                    "version_id": latest_release_id,
-                    **storage.load_latest_release_options(),
-                }
+                launch_targets[LATEST_RELEASE_PROFILE_ID] = get_latest_release_profile()
             for installation in installations:
                 version_id = get_profile_version_id(installation)
                 if not version_id:
@@ -3035,11 +2976,6 @@ def main(page: ft.Page):
             refresh_launch_button()
 
             # Installed configurations vs unconfigured local versions
-            installed_profiles = [
-                p
-                for p in installations
-                if get_profile_version_id(p) in local_version_ids
-            ]
             configured_version_ids = {
                 get_profile_version_id(p) for p in installations
             }
@@ -3048,112 +2984,6 @@ def main(page: ft.Page):
                 for v in installed_versions
                 if v["version_id"] not in configured_version_ids
             ]
-
-            installed_rows = []
-            for idx, profile in enumerate(installed_profiles):
-                is_last = idx == len(installed_profiles) - 1
-                is_inst = bool(profile.get("is_instance"))
-                icon = (
-                    ft.Icons.FOLDER_SPECIAL
-                    if is_inst
-                    else ft.Icons.INVENTORY_2
-                )
-                title_row = [
-                    ft.Text(
-                        profile["name"],
-                        size=14,
-                        weight=ft.FontWeight.W_500,
-                        color=theme["text_primary"],
-                    ),
-                    *build_profile_badges(profile),
-                ]
-
-                row_controls = [
-                    features.profile_icon(profile),
-                    ft.Column(
-                        spacing=2,
-                        controls=[
-                            ft.Row(
-                                spacing=8,
-                                vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                                controls=title_row,
-                            ),
-                            ft.Text(
-                                profile_summary(profile),
-                                size=12,
-                                color=theme["text_secondary"],
-                            ),
-                        ],
-                        expand=True,
-                    ),
-                    ft.IconButton(icon=ft.Icons.EXTENSION_OUTLINED, tooltip=tooltip('Manage mods'),
-                                  icon_color=theme['text_secondary'],
-                                  on_click=lambda e, selected_id=profile['id']: navigate('mods', selected_id)),
-                    ft.IconButton(icon=ft.Icons.BUILD_OUTLINED, tooltip=tooltip('Repair Minecraft files'),
-                                  icon_color=theme['text_secondary'], disabled=features.busy,
-                                  on_click=lambda e, selected=profile: page.run_task(features.repair_profile, selected)),
-                    ft.IconButton(
-                        icon=ft.Icons.FOLDER_OPEN_OUTLINED,
-                        tooltip=tooltip("Open game directory"),
-                        icon_color=theme["text_secondary"],
-                        style=rounded_button_style,
-                        on_click=lambda e, selected=profile: features.open_profile_folder(selected),
-                    ),
-                    ft.IconButton(
-                        icon=ft.Icons.EDIT_OUTLINED,
-                        tooltip=tooltip(f"Edit {profile['name']}"),
-                        icon_color=theme["text_secondary"],
-                        style=rounded_button_style,
-                        disabled=is_active_launch_version(
-                            get_profile_version_id(profile), profile["id"]
-                        ),
-                        on_click=lambda e, selected_id=profile["id"]: navigate(
-                            "edit_installation", selected_id
-                        ),
-                    ),
-                    ft.IconButton(
-                        icon=ft.Icons.CLOSE,
-                        tooltip=tooltip(
-                            f"Remove {profile['name']}"
-                            if is_inst
-                            else f"Remove {profile['name']} from profiles"
-                        ),
-                        icon_color=theme["text_secondary"],
-                        style=rounded_button_style,
-                        disabled=is_active_launch_version(
-                            get_profile_version_id(profile), profile["id"]
-                        ),
-                        on_click=lambda e, selected_id=profile[
-                            "id"
-                        ]: confirm_delete(selected_id),
-                    ),
-                ]
-                row_controls.insert(len(row_controls) - 1, profile_menu(profile))
-                installed_rows.append(
-                    ft.Container(
-                        padding=ft.Padding.symmetric(vertical=12, horizontal=16),
-                        border=None if is_last else ft.Border.only(
-                            bottom=ft.BorderSide(1, color=theme["border"])
-                        ),
-                        content=ft.Row(
-                            controls=row_controls,
-                            vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                        ),
-                    )
-                )
-
-            if not installed_rows:
-                installed_rows.append(
-                    ft.Container(
-                        padding=ft.Padding.symmetric(vertical=24, horizontal=20),
-                        alignment=ft.Alignment.CENTER,
-                        content=ft.Text(
-                            "No local profiles or instances found",
-                            color=theme["text_muted"],
-                            size=13,
-                        ),
-                    )
-                )
 
             unconfigured_rows = []
             for idx, version in enumerate(unconfigured_versions):
@@ -3247,83 +3077,6 @@ def main(page: ft.Page):
                     )
                 )
 
-            pending_rows = []
-            for idx, profile in enumerate(pending_profiles):
-                is_last = idx == len(pending_profiles) - 1
-                pending_rows.append(
-                    ft.Container(
-                        padding=ft.Padding.symmetric(vertical=12, horizontal=16),
-                        border=None if is_last else ft.Border.only(
-                            bottom=ft.BorderSide(1, color=theme["border"])
-                        ),
-                        content=ft.Row(
-                            controls=[
-                                features.profile_icon(profile),
-                                ft.Column(
-                                    spacing=2,
-                                    controls=[
-                                        ft.Row(
-                                            spacing=8,
-                                            vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                                            controls=[
-                                                ft.Text(
-                                                    profile["name"],
-                                                    color=theme["text_primary"],
-                                                    size=14,
-                                                    weight=ft.FontWeight.W_500,
-                                                ),
-                                                *build_profile_badges(profile),
-                                            ],
-                                        ),
-                                        ft.Text(
-                                            profile_summary(profile),
-                                            color=theme["text_secondary"],
-                                            size=12,
-                                        ),
-                                    ],
-                                    expand=True,
-                                ),
-                                ft.IconButton(
-                                    icon=ft.Icons.FOLDER_OPEN_OUTLINED,
-                                    tooltip=tooltip("Open game directory"),
-                                    icon_color=theme["text_secondary"],
-                                    style=rounded_button_style,
-                                    on_click=lambda e, selected=profile: features.open_profile_folder(selected),
-                                ),
-                                ft.IconButton(
-                                    icon=ft.Icons.EDIT_OUTLINED,
-                                    tooltip=tooltip(f"Edit {profile['name']}"),
-                                    icon_color=theme["text_secondary"],
-                                    style=rounded_button_style,
-                                    disabled=is_active_launch_version(
-                                        get_profile_version_id(profile), profile["id"]
-                                    ),
-                                    on_click=lambda e, selected_id=profile[
-                                        "id"
-                                    ]: navigate("edit_installation", selected_id),
-                                ),
-                                profile_menu(profile),
-                                ft.IconButton(
-                                    icon=ft.Icons.CLOSE,
-                                    tooltip=tooltip(
-                                        f"Remove {profile['name']}"
-                                        if profile.get("is_instance")
-                                        else f"Remove {profile['name']} from profiles"
-                                    ),
-                                    icon_color=theme["text_secondary"],
-                                    style=rounded_button_style,
-                                    disabled=is_active_launch_version(
-                                        get_profile_version_id(profile), profile["id"]
-                                    ),
-                                    on_click=lambda e, selected_id=profile[
-                                        "id"
-                                    ]: confirm_delete(selected_id),
-                                ),
-                            ],
-                            vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                        ),
-                    )
-                )
             options_views = build_options_views(
                 page=page,
                 theme=theme,
@@ -3799,6 +3552,22 @@ def main(page: ft.Page):
                 ],
             )
 
+            if name == "installations":
+                if features.library is None:
+                    features.library = ClassicLibraryPage(
+                        on_new=lambda e: navigate("new_installation"),
+                        on_play=features.play_profile,
+                        on_mods=lambda pid: navigate("mods", pid),
+                        on_edit=lambda pid: navigate("edit_installation", pid),
+                        on_remove=confirm_delete,
+                        on_repair=lambda profile: page.run_task(features.repair_profile, profile),
+                        on_folder=features.open_profile_folder,
+                        on_move=features.move_profile, on_order=features.reorder_profiles,
+                        busy=lambda: features.busy,
+                    )
+                features.library.refresh(installations, local_version_ids, launch_selection["key"],
+                                         footer=danger_zone_controls)
+
             pages = {
                 "skins": ft.Container(),
                 "mods": features.mods,
@@ -3827,75 +3596,7 @@ def main(page: ft.Page):
                         ],
                     ),
                 ),
-                "installations": ft.Container(
-                    expand=True,
-                    padding=ft.Padding.symmetric(horizontal=26, vertical=18),
-                    content=ft.Column(
-                        expand=True,
-                        spacing=16,
-                        controls=[
-                            ft.Row(
-                                controls=[new_installation_button],
-                            ),
-                            ft.Column(
-                                expand=True,
-                                spacing=14,
-                                scroll=ft.ScrollMode.AUTO,
-                                controls=[
-                                    ft.Container(
-                                        padding=ft.Padding.only(
-                                            left=4, top=4, bottom=0
-                                        ),
-                                        content=ft.Text(
-                                            "INSTALLED PROFILES",
-                                            size=12,
-                                            color=theme["text_secondary"],
-                                            weight=ft.FontWeight.BOLD,
-                                        ),
-                                    ),
-                                    ft.Container(
-                                        bgcolor=theme["surface"],
-                                        border=ft.Border.all(1, color=theme["border"]),
-                                        border_radius=12,
-                                        clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
-                                        content=ft.Column(
-                                            spacing=0,
-                                            controls=installed_rows,
-                                        ),
-                                    ),
-                                    *(
-                                        [
-                                            ft.Container(
-                                                padding=ft.Padding.only(
-                                                    left=4, top=14, bottom=0
-                                                ),
-                                                content=ft.Text(
-                                                    "CONFIGURED, NOT INSTALLED",
-                                                    size=12,
-                                                    color=theme["text_secondary"],
-                                                    weight=ft.FontWeight.BOLD,
-                                                ),
-                                            ),
-                                            ft.Container(
-                                                bgcolor=theme["surface"],
-                                                border=ft.Border.all(1, color=theme["border"]),
-                                                border_radius=12,
-                                                clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
-                                                content=ft.Column(
-                                                    spacing=0,
-                                                    controls=pending_rows,
-                                                ),
-                                            ),
-                                        ]
-                                        if pending_rows
-                                        else []
-                                    ),
-                                    *danger_zone_controls,
-                                ],
-                            ),
-                        ],
-                    ),
-                ),
+                "installations": features.library,
                 "options": options_dashboard,
                 "options_ui": ui_subpage,
                 "options_java": java_subpage,
@@ -3979,38 +3680,13 @@ def main(page: ft.Page):
                 if callable(anim):
                     page.run_task(anim)
 
-            if page_content.content is None:
-                page_content.content = pages[name]
-                current_page = name
-                if name in tab_names:
-                    tab = name
-                elif name.startswith("options"):
-                    tab = "options"
-                else:
-                    tab = "installations"
-                tabs_buttons.selected_index = tab_names.index(tab)
-                page.update()
-                return
-
-            if current_page == name and not force:
-                return
-
-            transition_id += 1
-            current_page = name
-            page.run_task(transition_page, name, pages[name], transition_id)
+            show_page(name, pages[name])
 
         navigation_state["navigate"] = navigate
 
         tab_names = ["home", "installations", "mods", "skins", "options"]
 
         def on_tab_select(selected_tab):
-            current_tab = (
-                current_page
-                if current_page in tab_names
-                else ("options" if current_page and current_page.startswith("options") else "installations")
-            )
-            if selected_tab == current_tab and current_page != selected_tab:
-                return
             if selected_tab != current_page:
                 navigate(selected_tab)
 

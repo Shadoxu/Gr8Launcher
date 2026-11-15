@@ -1,0 +1,23 @@
+{
+    "typeCheckingMode": "off",
+    "include": [
+        "*.py",
+        "tools"
+    ],
+    "exclude": [
+        "**/node_modules",
+        "**/__pycache__",
+        "**/.*",
+        "**/venv",
+        "**/*.egg-info",
+        "**/*.build",
+        "**/*.dist",
+        "**/*.onefile-build",
+        "temp",
+        "tests",
+        "REF",
+        "new_ui",
+        "build",
+        "dist"
+    ]
+}

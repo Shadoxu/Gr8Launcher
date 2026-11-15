@@ -3,7 +3,7 @@
 The bottom progress bar stays available on every launcher page. Minecraft
 installation and repair, mod searches and details, mod downloads and file
 changes, skin refresh, sign-in, and version fetches use the same `ProgressHost`.
-Its navy/gold styling matches the existing download footer.
+Its colors follow the selected classic theme and match the download footer.
 The status and detail text above the bar appear only on Home. Other pages keep
 the bar without the text row, including during active work. Returning to Home
 restores the current task or idle status.
@@ -21,8 +21,8 @@ Measured fills animate on the client over 240 ms, retargeting smoothly when new
 counts arrive. Progress snapshots retain the measured value regardless of how
 often callbacks or UI reads occur. Returning to idle cancels the animation.
 While measured work is incomplete, a 90px feathered gradient beam moves from left
-to right inside the gold fill, including when counts pause. It reuses v1.2.0's
-gradient shape with a navy tint. Each sweep animates on the client; the launcher
+to right inside the accent fill, including when counts pause. It reuses v1.2.0's
+gradient shape with the selected background tint. Each sweep animates on the client; the launcher
 only resets it between sweeps. Unknown totals, completion, idle, and shutdown
 stop the shimmer.
 

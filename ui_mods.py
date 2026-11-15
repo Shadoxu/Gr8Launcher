@@ -16,7 +16,8 @@ from mod_platform import ModPlatformClient
 from ui_profiles import ProfileList, profile_card_surface, profile_list_surface, profile_row
 from ui_controls import (SimpleInput, AcrylicSelector, launcher_button, launcher_back_button,
                           launcher_icon_button, rounded_artwork, format_size as _size,
-                          format_downloads as _downloads, search_input, card_surface, launcher_asset_icon)
+                          format_downloads as _downloads, search_input, card_surface, launcher_asset_icon,
+                          launcher_tab, select_tab)
 from ui_motion import StaggeredReveal
 from ui_mod_list import ModList
 from ui_mod_details import ModDetailsPage
@@ -25,8 +26,9 @@ from ui_modpacks import CONTENT_OPTIONS, ModpacksPage
 from ui_progress import ProgressHost, ProgressTask, track_progress
 
 
-def _text(value: str, size: int = 13, *, color: str | None = None, pixel: bool = False, **kwargs) -> ft.Text:
-    return ft.Text(value, size=size, color=theme.MUTED if color is None else color, font_family="ps" if pixel else None, **kwargs)
+def _text(value: str, size: int = 13, *, color: str | None = None, emphasis: bool = False, **kwargs) -> ft.Text:
+    kwargs.setdefault("weight", ft.FontWeight.W_600 if emphasis else ft.FontWeight.NORMAL)
+    return ft.Text(value, size=size, color=theme.MUTED if color is None else color, **kwargs)
 
 
 def _button(label: str, on_click: Callable, *, primary: bool = False, **kwargs) -> ft.Button:
@@ -107,20 +109,20 @@ class ModsPage(ft.Container):
         self.checking_updates = False
         self._update_activity: ProgressTask | None = None
 
-        self.heading = _text("Mods", 32, color=theme.ACCENT, pixel=True)
+        self.heading = _text("Mods", 24, color=theme.TEXT, emphasis=True)
         self.content_selector = AcrylicSelector(CONTENT_OPTIONS, "mods", self._content_changed,
                                                 width=160, tooltip="Content type")
         self.select_profile_button = _button(
             "Select Profile", lambda e: self.open_profile_selection(),
-            tooltip="Select Profile", height=54, width=320,
+            tooltip="Select Profile", height=52, width=280,
         )
-        self.context = ft.Container(content=self.select_profile_button, width=320)
+        self.context = ft.Container(content=self.select_profile_button, width=280)
         self._render_profile_header()
         self.header = ft.Row([
             self.heading, self.content_selector, ft.Container(expand=True), self.context,
         ], spacing=16, vertical_alignment=ft.CrossAxisAlignment.CENTER)
-        self.installed_tab = _button("Installed", lambda e: self.set_view("installed"))
-        self.browse_tab = _button("Discover", lambda e: self.set_view("browse"))
+        self.installed_tab = launcher_tab("Installed", lambda e: self.set_view("installed"))
+        self.browse_tab = launcher_tab("Discover", lambda e: self.set_view("browse"))
         self.attribution = _text("Powered by Modrinth", 11)
         self.update_button = _button("Check updates", self._updates_action)
         self.tabs = ft.Row([
@@ -179,7 +181,7 @@ class ModsPage(ft.Container):
         self.details_host = ft.Container(expand=True, visible=False, content=self.details_page)
         self.selection_heading = ft.Row([
             launcher_back_button(lambda e: self.close_profile_selection(), tooltip="Back to Mods"),
-            _text("Select Profile", 32, color=theme.ACCENT, pixel=True),
+            _text("Select Profile", 24, color=theme.TEXT, emphasis=True),
         ], spacing=12)
         self.selection_note = _text("Choose the profile whose mods you want to manage.")
         self.selection_list = ProfileList(on_order_changed=lambda ids: False)
@@ -196,7 +198,7 @@ class ModsPage(ft.Container):
             client=self.client, runtime_directory=runtime_directory,
             other_busy=lambda: self._mods_busy or self.checking_updates, progress=progress, entrance=entrance,
         )
-        super().__init__(expand=True, padding=ft.Padding.only(left=20, right=24, top=10, bottom=8),
+        super().__init__(expand=True, padding=ft.Padding.only(left=28, right=28, top=20, bottom=16),
                          content=ft.Stack([self.mods_host, self.modpacks_page], expand=True))
         self.list_reveal = StaggeredReveal(page, self.list_host)
         self.selection_reveal = StaggeredReveal(page, self.selection_host)
@@ -228,8 +230,6 @@ class ModsPage(ft.Container):
         self.content_type = kind
         self.mods_host.visible = kind == "mods"
         self.modpacks_page.visible = kind == "modpacks"
-        self.heading.value = "Modpacks" if kind == "modpacks" else "Mods"
-        self.modpacks_page.heading.value = "Modpacks"
         self.content_selector.refresh_options(CONTENT_OPTIONS, kind)
         self.modpacks_page.content_selector.refresh_options(CONTENT_OPTIONS, kind)
         if active:
@@ -331,16 +331,19 @@ class ModsPage(ft.Container):
         summary = " · ".join(str(value) for value in (
             profile.get("loader"), profile.get("minecraft_version")) if value)
         self.select_profile_button.content = ft.Row([
-            rounded_artwork(self._profile_icon(profile), size=28),
+            rounded_artwork(self._profile_icon(profile), size=32),
             ft.Column([
-                _text(profile.get("name", "Unnamed profile"), 16, color=theme.TEXT_HEADING, pixel=True,
+                _text(profile.get("name", "Unnamed profile"), 14, color=theme.TEXT_HEADING, emphasis=True,
                       max_lines=1, overflow=ft.TextOverflow.ELLIPSIS),
                 _text(summary or "Select an instance", 11, max_lines=1,
                       overflow=ft.TextOverflow.ELLIPSIS),
             ], expand=True, spacing=1, tight=True),
             ft.Icon(ft.Icons.EXPAND_MORE_SHARP, size=18, color=theme.ACCENT),
         ], spacing=10, vertical_alignment=ft.CrossAxisAlignment.CENTER)
-        self.select_profile_button.style.bgcolor = theme.SURFACE
+        self.select_profile_button.style.bgcolor = {
+            ft.ControlState.DEFAULT: theme.SURFACE,
+            ft.ControlState.HOVERED: theme.CARD_HOVER,
+        }
 
     def _profile_row(self, profile: dict, actions: list[ft.Control], *, selected=False,
                      on_select: Callable | None = None) -> ft.Container:
@@ -366,7 +369,7 @@ class ModsPage(ft.Container):
                 key=ft.ValueKey(f"mods-profile-{pid}"), data=pid,
                 margin=ft.Margin.only(bottom=8),
                 border=ft.Border.all(1, theme.ACCENT if selected else theme.TRANSPARENT),
-                border_radius=5,
+                border_radius=12,
                 animate=ft.Animation(180, ft.AnimationCurve.EASE_OUT_CUBIC),
                 content=self._profile_row(profile, [
                     _button("Selected" if selected else "Select", choose,
@@ -843,7 +846,7 @@ class ModsPage(ft.Container):
 
         from ui_mod_details import open_link
         key_link = ft.TextButton(
-            content=ft.Text("Get an API key", font_family="ps", size=13),
+            content=ft.Text("Get an API key", size=13),
             style=ft.ButtonStyle(
                 color={ft.ControlState.HOVERED: theme.ACCENT, ft.ControlState.DEFAULT: theme.NAV_MUTED},
                 bgcolor=theme.TRANSPARENT, overlay_color=theme.TRANSPARENT,
@@ -855,7 +858,7 @@ class ModsPage(ft.Container):
             ft.Column([_text("CurseForge requires an API key registered for your launcher. The key is stored in your system credential vault when available.", 13),
                        field, ft.Row([key_link], tight=True)], spacing=16,
                       horizontal_alignment=ft.CrossAxisAlignment.STRETCH),
-            title=_text("CurseForge setup", 22, color=theme.ACCENT, pixel=True),
+            title=_text("CurseForge setup", 22, color=theme.ACCENT, emphasis=True),
             actions=[_button("Clear key", remove), _button("Cancel", close), _button("Save key", save, primary=True)],
             on_cancel=close, width=540, height=380,
         )
@@ -877,8 +880,7 @@ class ModsPage(ft.Container):
         self.installed_tab.disabled = controls_busy or not self._compatible()
         self.browse_tab.disabled = controls_busy or not self._compatible()
         for tab, selected in ((self.installed_tab, not browse), (self.browse_tab, browse)):
-            tab.style.bgcolor = theme.SURFACE if selected and self._compatible() else theme.TRANSPARENT
-            tab.content.color = theme.ACCENT if selected and self._compatible() else theme.MUTED
+            select_tab(tab, selected and self._compatible())
         self.installed_tab.content.value = f"Installed · {len(self.local_mods)}" if self._compatible() else "Installed"
         self.attribution.visible = browse and self._compatible()
         self.attribution.value = "Powered by CurseForge" if self.provider == "curseforge" else "Powered by Modrinth"
@@ -918,8 +920,8 @@ class ModsPage(ft.Container):
         self.list_view.set_items([], self._cached_row)
         controls = [launcher_asset_icon(src="sidebar/mods_muted.png", color=theme.NAV_MUTED,
                                        width=44, height=44, fit=ft.BoxFit.CONTAIN),
-                    _text(title, 22, color=theme.ACCENT, pixel=True),
-                    _text(description, 13, text_align=ft.TextAlign.CENTER, max_lines=3)]
+                    _text(title, 20, color=theme.TEXT, emphasis=True),
+                    ft.Container(width=560, content=_text(description, 13, text_align=ft.TextAlign.CENTER, max_lines=4))]
         if action:
             controls.append(action)
         self.list_body.content = ft.Container(
@@ -931,7 +933,7 @@ class ModsPage(ft.Container):
     def _render_list(self) -> None:
         browse = self.view == "browse"
         self.previous.visible = self.next.visible = self.page_label.visible = browse and self.total_hits > 0
-        self.pagination.visible = browse and self.total_hits > 0 and self._compatible() and not self.error
+        self.pagination.visible = browse and self.total_hits > self.PAGE_SIZE and self._compatible() and not self.error
         self.previous.disabled = self.search_offset == 0 or self.loading or self._operation_in_progress
         self.next.disabled = self.search_offset + self.PAGE_SIZE >= self.total_hits or self.loading or self._operation_in_progress
         self.page_label.value = f"{self.search_offset // self.PAGE_SIZE + 1} / {max(1, (self.total_hits + self.PAGE_SIZE - 1) // self.PAGE_SIZE)}"
@@ -1046,7 +1048,7 @@ class ModsPage(ft.Container):
             ft.GestureDetector(content=ft.Row([
                 ft.Container(rounded_artwork(icon, size=48), opacity=1 if mod.enabled else 0.45, width=48),
                 self._mod_info(
-                    _text(mod.name, 18, color=theme.ACCENT if mod.enabled else theme.MUTED, pixel=True,
+                    _text(mod.name, 15, color=theme.TEXT if mod.enabled else theme.MUTED, emphasis=True,
                           max_lines=1, overflow=ft.TextOverflow.ELLIPSIS),
                     mod.description or project.get("description", ""),
                     _text(" · ".join(value for value in (mod.version, _size(mod.size), "Pack managed" if mod.pack_owned else "") if value),
@@ -1058,7 +1060,7 @@ class ModsPage(ft.Container):
                 self._prepare_install, {"project_id": target.mod.project_id, "title": target.mod.name},
                 target.version, profile_id, target), disabled=locked,
                 tooltip="Review update and required dependencies") if update else ft.Container(width=0),
-            ft.Switch(value=mod.enabled, active_color=theme.ACCENT, active_track_color=theme.SWITCH_ACTIVE_TRACK,
+            ft.Switch(value=mod.enabled, active_color=theme.ACCENT, active_track_color=theme.opacity(0.38, theme.ACCENT),
                       inactive_thumb_color=theme.MUTED, inactive_track_color=theme.SWITCH_INACTIVE_TRACK, disabled=locked,
                       tooltip="Disable mod" if mod.enabled else "Enable mod",
                       on_change=lambda e, item=mod: self._page.run_task(self._toggle, item, bool(e.control.value), manager)),
@@ -1087,7 +1089,7 @@ class ModsPage(ft.Container):
             ft.GestureDetector(content=ft.Row([
                 rounded_artwork(icon, size=48),
                 self._mod_info(
-                    _text(hit.get("title", "Unnamed mod"), 18, color=theme.ACCENT, pixel=True,
+                    _text(hit.get("title", "Unnamed mod"), 15, color=theme.TEXT, emphasis=True,
                           max_lines=1, overflow=ft.TextOverflow.ELLIPSIS),
                     hit.get("description", ""),
                     _text(f"{hit.get('author', 'Unknown')} · {_downloads(hit.get('downloads', 0))} downloads",
@@ -1200,7 +1202,7 @@ class ModsPage(ft.Container):
             ft.Column([_text(f"Remove {mod.name} from {profile_name}?", 15, color=theme.TEXT),
                        _text("The JAR will move to launcher trash. Use Undo in the notification to restore it.", 13),
                        _text("Mods in the same game folder are shared by its profiles.", 12)], spacing=14),
-            title=_text("Remove mod", 22, color=theme.ACCENT, pixel=True),
+            title=_text("Remove mod", 22, color=theme.ACCENT, emphasis=True),
             actions=[_button("Cancel", lambda e: self._dialogs().close()), _button("Remove", remove, primary=True)],
             on_cancel=lambda e: self._dialogs().close(), width=510, height=320,
         )

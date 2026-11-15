@@ -142,10 +142,10 @@ class ToastHost(ft.Container):
         )
         action_button = launcher_button(action_label, None, height=30) if action_label and on_action else None
         glass = ft.Container(
-            border_radius=8,
+            border_radius=12,
+            border=ft.Border.all(1, theme.BORDER),
             clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
-            blur=ft.Blur(10, 10),
-            bgcolor=ft.Colors.with_opacity(0.7,theme.TOAST_BACKGROUND),
+            bgcolor=theme.TOAST_BACKGROUND,
             content=ft.Column(
                 tight=True,
                 spacing=0,
@@ -160,7 +160,7 @@ class ToastHost(ft.Container):
                                 ft.Container(
                                     width=36,
                                     height=36,
-                                    border_radius=2,
+                                    border_radius=8,
                                     bgcolor=theme.SURFACE,
                                     alignment=ft.Alignment.CENTER,
                                     content=ft.Image(
@@ -177,11 +177,11 @@ class ToastHost(ft.Container):
                                     spacing=4,
                                     controls=[
                                         ft.Text(
-                                            title, font_family="ps", size=16,
+                                            title, size=15,
                                             weight=ft.FontWeight.BOLD, color=color,
                                         ),
                                         ft.Text(
-                                            message, font_family="ps", size=14,
+                                            message, size=13,
                                             color=theme.TEXT_HEADING, selectable=True,
                                         ),
                                         *([action_button] if action_button else []),
@@ -204,7 +204,7 @@ class ToastHost(ft.Container):
             shadow=ft.BoxShadow(
                 blur_radius=8,
                 spread_radius=0,
-                color=ft.Colors.with_opacity(0.22, theme.BLACK),
+                color=theme.opacity(0.22, theme.BLACK),
                 offset=ft.Offset(0, 5),
             ),
             # An opacity layer isolates BackdropFilter from the page while it

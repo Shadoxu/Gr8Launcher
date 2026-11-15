@@ -41,13 +41,14 @@ class ModInstallReview(ft.Column):
         self.title = ft.Row([
             rounded_artwork(artwork, size=48),
             ft.Column([
-                ft.Text(f"Update {len(updates)} {'mod' if len(updates) == 1 else 'mods'}" if updates else f"Install {hit.get('title', 'mod')}", font_family="ps", size=22, color=theme.ACCENT,
+                ft.Text(f"Update {len(updates)} {'mod' if len(updates) == 1 else 'mods'}" if updates else f"Install {hit.get('title', 'mod')}", size=20, color=theme.TEXT,
                         max_lines=2, overflow=ft.TextOverflow.ELLIPSIS),
                 _text("Review your updates" if updates else "Review your installation", 12),
             ], spacing=2, expand=True),
         ], spacing=14)
         self.destination = ft.Container(
-            bgcolor=theme.SURFACE, border_radius=5, padding=12,
+            bgcolor=theme.SURFACE_STRONG, border_radius=8, padding=12,
+            border=ft.Border.all(1, theme.BORDER),
             content=ft.Row([
                 rounded_artwork(profile_icon, size=32),
                 ft.Column([
@@ -138,7 +139,7 @@ class ModInstallReview(ft.Column):
                     _text(status, 11, color=theme.ACCENT if status == "Required" else theme.MUTED),
                 ], spacing=8))
             self.controls.extend([
-                ft.Text("Dependencies", font_family="ps", size=17, color=theme.ACCENT),
+                ft.Text("Dependencies", size=15, color=theme.TEXT, weight=ft.FontWeight.W_600),
                 ft.Container(ft.Column(rows, spacing=10), bgcolor=theme.SURFACE, border_radius=5, padding=10),
             ])
         elif not self.updates:
@@ -156,7 +157,7 @@ class ModInstallReview(ft.Column):
         if manual:
             from ui_mod_details import open_link
             self.controls.extend([
-                ft.Text("Manual CurseForge downloads", font_family="ps", size=17, color=theme.ACCENT),
+                ft.Text("Manual CurseForge downloads", size=15, color=theme.TEXT, weight=ft.FontWeight.W_600),
                 _text("The authors restrict third-party downloads. Download these exact files on CurseForge, then select them here.", 12),
             ])
             for file in manual:
@@ -170,7 +171,7 @@ class ModInstallReview(ft.Column):
         if self.checking:
             self.controls.append(_text("Checking dependency compatibility…", 12, color=theme.ACCENT))
         if self.error:
-            self.controls.append(_text(self.error, 12, color=theme.ACCENT))
+            self.controls.append(_text(self.error, 12, color=theme.DANGER))
 
     def _optional_handler(self, project: str) -> Callable:
         async def changed(e) -> None:

@@ -25,9 +25,11 @@ from ui_controls import (
     search_input,
     card_surface,
     launcher_asset_icon,
+    launcher_tab,
+    select_tab,
 )
 from ui_motion import StaggeredReveal
-from ui_profiles import ProfileList, profile_card_surface, profile_list_surface
+from ui_profiles import ProfileList, profile_card_surface, profile_list_surface, scroll_fade_shader
 from ui_progress import ProgressHost, ProgressTask, track_progress
 from ui_scroll_views import ScrollColumn
 
@@ -35,8 +37,9 @@ BODY_FONT = "Segoe UI"
 SIDEBAR_WIDTH = 236
 
 
-def text(value: str, size=13, *, pixel=False, color=None, **kwargs) -> ft.Text:
-    return ft.Text(value, size=size, color=theme.TEXT_DETAIL if color is None else color, font_family="ps" if pixel else None, **kwargs)
+def text(value: str, size=13, *, emphasis=False, color=None, **kwargs) -> ft.Text:
+    kwargs.setdefault("weight", ft.FontWeight.W_600 if emphasis else ft.FontWeight.NORMAL)
+    return ft.Text(value, size=size, color=theme.TEXT_DETAIL if color is None else color, **kwargs)
 
 
 def open_link(url: str) -> None:
@@ -108,9 +111,10 @@ class ModDetailsPage(ft.Container):
         self._source_manager = None
 
         self.back = launcher_back_button(lambda e: on_back(), tooltip="Back to Mods")
-        self.profile_label = text("", 12, color=theme.MUTED, max_lines=1, overflow=ft.TextOverflow.ELLIPSIS)
-        self.back_bar = ft.Row([self.back, ft.Container(expand=True), self.profile_label])
-        self.title = text("Mod details", 28, pixel=True, color=theme.ACCENT, max_lines=2, overflow=ft.TextOverflow.ELLIPSIS)
+        self.profile_label = text("", 12, color=theme.MUTED, max_lines=1, overflow=ft.TextOverflow.ELLIPSIS,
+                                  expand=True, text_align=ft.TextAlign.RIGHT)
+        self.back_bar = ft.Row([self.back, self.profile_label])
+        self.title = text("Mod details", 24, emphasis=True, color=theme.TEXT, max_lines=2, overflow=ft.TextOverflow.ELLIPSIS)
         self.subtitle = text("", 12, color=theme.MUTED, max_lines=1, overflow=ft.TextOverflow.ELLIPSIS)
         self.summary = text("", 13, max_lines=2, overflow=ft.TextOverflow.ELLIPSIS)
         self.icon_host = ft.Container(width=64, height=64, alignment=ft.Alignment.CENTER)
@@ -123,14 +127,17 @@ class ModDetailsPage(ft.Container):
             ], expand=True, spacing=5),
             self.install_button, self.toggle_button, self.remove_button,
         ], spacing=16, vertical_alignment=ft.CrossAxisAlignment.CENTER), glow_color=theme.GLOW, horizontal_padding=16)
-        self.section_buttons = {key: launcher_button(label, lambda e, name=key: self.set_section(name))
+        self.section_buttons = {key: launcher_tab(label, lambda e, name=key: self.set_section(name))
                                 for key, label in (("overview", "Overview"), ("versions", "Versions"), ("gallery", "Gallery"))}
         self.tabs = ft.Row(list(self.section_buttons.values()), spacing=8)
         self.feedback = ft.Row([text("", 12, color=theme.MUTED, expand=True), launcher_button("Retry", self._retry)], visible=False)
         self.body = profile_list_surface(ft.Container(expand=True))
         self.version_search = search_input("Search versions", on_change=self._filter_versions)
         self.release_filter = AcrylicSelector([("all", "All releases"), ("release", "Stable"), ("beta", "Beta"), ("alpha", "Alpha")], "release", self._release_filter_changed, width=160)
-        self.compatible_only = ft.Switch(value=True, active_color=theme.ACCENT, track_color=theme.SWITCH_TRACK, on_change=self._filter_versions)
+        self.compatible_only = ft.Switch(value=True, active_color=theme.ACCENT,
+                                        active_track_color=theme.opacity(0.38, theme.ACCENT),
+                                        inactive_track_color=theme.SWITCH_INACTIVE_TRACK,
+                                        inactive_thumb_color=theme.MUTED, on_change=self._filter_versions)
         self.version_list = ProfileList(on_order_changed=lambda ids: False)
         self.version_hint = text("", 12, color=theme.MUTED)
         self.version_previous = launcher_icon_button(icon=ft.Icons.CHEVRON_LEFT_SHARP, tooltip="Previous versions", on_click=lambda e: self._paginate_versions(-1))
@@ -345,11 +352,13 @@ class ModDetailsPage(ft.Container):
         self.feedback.visible = bool(self.error)
         self.feedback.controls[0].value = self.error
         for key, button in self.section_buttons.items():
-            button.style.bgcolor = theme.SURFACE if key == self.section else theme.TRANSPARENT
-            button.content.color = theme.ACCENT if key == self.section else theme.MUTED
+            select_tab(button, key == self.section)
         self.section_buttons["gallery"].visible = bool(self.project.get("gallery"))
+        self.body.shader = scroll_fade_shader(self.section != "versions" or bool(self.selected_version))
         if self.section == "versions":
             self._render_versions()
+            if self.selected_version:
+                return
             content = self.versions_panel
         elif self.section == "gallery":
             content = self._gallery()
@@ -411,11 +420,12 @@ class ModDetailsPage(ft.Container):
                 for key, url in local_links.items():
                     if isinstance(url, str) and urlparse(url).scheme in {"http", "https"}:
                         links.append(self._link(key.title(), url))
-        sidebar = [text("About this mod", 18, pixel=True, color=theme.ACCENT), *facts]
+        sidebar = [text("About this mod", 15, emphasis=True, color=theme.TEXT), *facts]
         if links:
-            sidebar.extend([text("Links", 16, pixel=True, color=theme.ACCENT),
+            sidebar.extend([text("Links", 14, emphasis=True, color=theme.TEXT),
                             ft.Column(links, spacing=2, horizontal_alignment=ft.CrossAxisAlignment.STRETCH)])
-        panel = ft.Container(padding=16, bgcolor=theme.SURFACE, border_radius=5,
+        panel = ft.Container(padding=16, bgcolor=theme.SURFACE, border_radius=12,
+                             border=ft.Border.all(1, theme.BORDER),
                              content=ft.Column(sidebar, spacing=12, horizontal_alignment=ft.CrossAxisAlignment.STRETCH))
         return ft.Row([main, ft.Container(width=SIDEBAR_WIDTH, visible=bool(facts or links),
                                          content=ScrollColumn([panel], bottom_fade=True, scroll=ft.ScrollMode.AUTO, expand=True))],
@@ -456,7 +466,7 @@ class ModDetailsPage(ft.Container):
             self._version_actions.append((install, version))
             card = profile_card_surface(ft.Row([
                 ft.Container(content=ft.Column([
-                    text(version.get("name") or version.get("version_number", "Version"), 17, pixel=True, color=theme.ACCENT),
+                    text(version.get("name") or version.get("version_number", "Version"), 15, emphasis=True, color=theme.TEXT),
                     text(" / ".join([version.get("version_type", "release").title(), version.get("date_published", "")[:10],
                                      ", ".join(version.get("loaders", [])), "Minecraft " + ", ".join(version.get("game_versions", []))]), 11,
                          max_lines=2, overflow=ft.TextOverflow.ELLIPSIS),
@@ -494,6 +504,7 @@ class ModDetailsPage(ft.Container):
         load_changelog = version.get("provider") == "curseforge" and not version.get("_changelog_loaded")
         if load_changelog:
             version["_changelog_loading"] = True
+        self.body.shader = scroll_fade_shader()
         self.reveal.show(self._version_details(version), animate=False)
         self._update()
         if load_changelog:
@@ -520,6 +531,7 @@ class ModDetailsPage(ft.Container):
     def _version_details(self, version: dict) -> ft.Column:
         def back(e):
             self.selected_version = None
+            self.body.shader = scroll_fade_shader(False)
             self.reveal.show(self.versions_panel, animate=False)
             self._render_versions()
         compatible = self._compatible(version)
@@ -528,8 +540,8 @@ class ModDetailsPage(ft.Container):
                                   disabled=not compatible or not self._can_change() or bool(self.local and self.local.version_id == version.get("id")))
         self._version_actions = [(install, version)]
         controls = [ft.Row([launcher_back_button(back, tooltip="Back to versions"), ft.Container(expand=True), install]),
-                    text(version.get("name") or version.get("version_number", "Version"), 23, pixel=True, color=theme.ACCENT),
-                    text(requirements, 13), text("Changelog", 19, pixel=True, color=theme.ACCENT),
+                    text(version.get("name") or version.get("version_number", "Version"), 24, emphasis=True, color=theme.TEXT),
+                    text(requirements, 13), text("Changelog", 19, emphasis=True, color=theme.TEXT),
                     markdown("Loading changelog..." if version.get("_changelog_loading") else
                              version.get("changelog") or "No changelog was provided for this release.",
                              base_url=self.project.get("project_url") or "https://modrinth.com/")]
@@ -546,10 +558,10 @@ class ModDetailsPage(ft.Container):
         controls = []
         for item in self.project.get("gallery", []):
             controls.append(ft.Container(
-                padding=12, border_radius=5, bgcolor=theme.SURFACE,
+                padding=12, border_radius=12, bgcolor=theme.SURFACE, border=ft.Border.all(1, theme.BORDER),
                 content=ft.Column([
                     ft.Image(src=item.get("url", ""), fit=ft.BoxFit.CONTAIN, height=280),
-                    text(item.get("title") or "", 17, pixel=True, color=theme.ACCENT),
+                    text(item.get("title") or "", 15, emphasis=True, color=theme.TEXT),
                     text(item.get("description") or "", 13),
                 ], spacing=10),
             ))

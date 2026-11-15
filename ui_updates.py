@@ -59,7 +59,6 @@ class UpdateController:
         # Status & version indicators
         self.version_badge_text = ft.Text(
             f"Gr8 Launcher {version}",
-            font_family="ps",
             size=14,
             weight=ft.FontWeight.BOLD,
             color=theme.ACCENT,
@@ -71,7 +70,6 @@ class UpdateController:
         )
         self.status_badge_text = ft.Text(
             "Ready to install" if self.release else "Up to date",
-            font_family="ps",
             size=12,
             color=theme.UPDATE if self.release else theme.NAV_MUTED,
         )
@@ -84,7 +82,7 @@ class UpdateController:
         self.spinner = ft.ProgressRing(width=14, height=14, stroke_width=2, color=theme.ACCENT, visible=False)
         self.status = ft.Text("Check for the latest launcher release.", size=12, color=theme.MUTED)
 
-        # Buttons (Strictly adhering to design_theme.txt: 5px rounded, BLACK_26 surfaces, ps font)
+        # Compact actions follow the classic Options controls.
         self.check_button = launcher_pill(
             "Check for Updates",
             lambda e: page.run_task(self.check, True),
@@ -97,7 +95,6 @@ class UpdateController:
         )
         self.action_button_text = ft.Text(
             "View Update",
-            font_family="ps",
             color=theme.ON_ACCENT,
             size=13,
             weight=ft.FontWeight.BOLD,
@@ -105,7 +102,7 @@ class UpdateController:
         self.action_button_icon = ft.Icon(ft.Icons.UPDATE_SHARP, size=15, color=theme.ON_ACCENT)
         self.action_button = ft.Container(
             bgcolor=theme.ACCENT,
-            border_radius=5,
+            border_radius=8,
             padding=ft.Padding.symmetric(horizontal=14, vertical=8),
             ink=True,
             visible=bool(self.release),
@@ -124,8 +121,8 @@ class UpdateController:
 
         # Ready notice banner (visible only when an update is downloaded & prepared)
         self.ready_banner = ft.Container(
-            bgcolor=ft.Colors.with_opacity(0.12, theme.ACCENT),
-            border_radius=5,
+            bgcolor=theme.opacity(0.12, theme.ACCENT),
+            border_radius=8,
             padding=ft.Padding.symmetric(horizontal=12, vertical=10),
             visible=bool(self.release),
             content=ft.Row([
@@ -157,14 +154,15 @@ class UpdateController:
         # Primary Status Card
         self.status_card = ft.Container(
             bgcolor=theme.SURFACE,
-            border_radius=5,
-            padding=ft.Padding.symmetric(horizontal=16, vertical=14),
+            border_radius=12,
+            border=ft.Border.all(1, theme.BORDER),
+            padding=ft.Padding.symmetric(horizontal=20, vertical=16),
             content=ft.Column([
                 ft.Row([
                     ft.Row([
                         ft.Icon(ft.Icons.SYSTEM_UPDATE_ALT, color=theme.ACCENT, size=20),
                         ft.Column([
-                            ft.Text("Launcher Updates", font_family="ps", color=theme.ACCENT, size=15, weight=ft.FontWeight.BOLD),
+                            ft.Text("Launcher Updates", color=theme.TEXT, size=15, weight=ft.FontWeight.BOLD),
                             ft.Row([self.version_badge_text, ft.Text("•", color=theme.NAV_MUTED, size=10), self.channel_badge_text], spacing=6),
                         ], spacing=1),
                     ], spacing=10, expand=True),
@@ -295,12 +293,12 @@ class UpdateController:
             content=ft.Row([
                 ft.Column([
                     ft.Text("INSTALLED", size=10, color=theme.NAV_MUTED, weight=ft.FontWeight.BOLD),
-                    ft.Text(updates.version_label(), font_family="ps", size=16, color=theme.TEXT_SECONDARY),
+                    ft.Text(updates.version_label(), size=16, color=theme.TEXT_SECONDARY),
                 ], spacing=2),
                 ft.Icon(ft.Icons.ARROW_FORWARD, size=18, color=theme.ACCENT),
                 ft.Column([
                     ft.Text("NEW RELEASE", size=10, color=theme.ACCENT, weight=ft.FontWeight.BOLD),
-                    ft.Text(f"v{self.release.version}", font_family="ps", size=16, color=theme.ACCENT, weight=ft.FontWeight.BOLD),
+                    ft.Text(f"v{self.release.version}", size=16, color=theme.ACCENT, weight=ft.FontWeight.BOLD),
                 ], spacing=2),
             ], spacing=16, vertical_alignment=ft.CrossAxisAlignment.CENTER),
         )
@@ -384,7 +382,7 @@ class UpdateController:
             ft.Column(details, spacing=12),
             title=ft.Row([
                 ft.Icon(ft.Icons.SYSTEM_UPDATE_ALT, color=theme.ACCENT, size=22),
-                ft.Text("Launcher Update", font_family="ps", size=20, color=theme.ACCENT),
+                ft.Text("Launcher Update", size=20, color=theme.ACCENT),
             ], spacing=10),
             actions=actions,
             on_cancel=self.later,
@@ -453,7 +451,7 @@ class UpdateController:
             content=ft.Row([
                 ft.Row([
                     ft.Icon(ft.Icons.AUTO_AWESOME_SHARP, size=16, color=theme.ACCENT),
-                    ft.Text(f"Gr8 Launcher {version_str}", font_family="ps", size=14, color=theme.ACCENT, weight=ft.FontWeight.BOLD),
+                    ft.Text(f"Gr8 Launcher {version_str}", size=14, color=theme.ACCENT, weight=ft.FontWeight.BOLD),
                 ], spacing=8),
                 ft.Text(badge_label, size=11, color=theme.NAV_MUTED),
             ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN, vertical_alignment=ft.CrossAxisAlignment.CENTER),
@@ -478,7 +476,7 @@ class UpdateController:
             ft.Column(details, spacing=12),
             title=ft.Row([
                 ft.Icon(ft.Icons.NEW_RELEASES_SHARP, color=theme.ACCENT, size=20),
-                ft.Text("Release Notes", font_family="ps", size=20, color=theme.ACCENT),
+                ft.Text("Release Notes", size=20, color=theme.ACCENT),
             ], spacing=10),
             actions=actions,
             on_cancel=lambda e: self.dialogs().close(),

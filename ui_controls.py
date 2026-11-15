@@ -1,4 +1,4 @@
-"""Shared launcher inputs, buttons, and anchored acrylic selectors."""
+"""Classic launcher inputs, rounded buttons, cards, and anchored selectors."""
 
 from __future__ import annotations
 
@@ -28,9 +28,12 @@ class SimpleInput(ft.TextField):
     def __init__(self, hint_text="Enter text", **kwargs):
         defaults = {
             "hint_text": hint_text, "bgcolor": theme.SURFACE,
-            "border": ft.NoInputBorder(), "hover_color": theme.TRANSPARENT,
-            "color": theme.TEXT, "hint_style": ft.TextStyle(color=theme.TEXT_HINT),
-            "cursor_color": theme.ACCENT,
+            "border_color": theme.BORDER, "focused_border_color": theme.ACCENT,
+            "border_radius": 5, "hover_color": theme.CARD_HOVER,
+            "color": theme.TEXT, "hint_style": ft.TextStyle(color=theme.MUTED, size=13),
+            "label_style": ft.TextStyle(color=theme.MUTED, size=13),
+            "cursor_color": theme.ACCENT, "text_size": 13,
+            "content_padding": ft.Padding.symmetric(horizontal=14, vertical=14),
         }
         if kwargs.get("password") and kwargs.get("can_reveal_password"):
             # Balance the caret beside the native reveal icon without resizing.
@@ -55,33 +58,61 @@ class SimpleButton(ft.Button):
 def launcher_button(label: str, on_click: Callable | None, *, primary: bool = False,
                     height: int = 36, **kwargs) -> SimpleButton:
     return SimpleButton(
-        ft.Text(label, font_family="ps", size=15, color=theme.ON_ACCENT if primary else theme.ACCENT),
+        ft.Text(label, size=13, weight=ft.FontWeight.W_600),
         on_click=on_click, height=height,
         style=ft.ButtonStyle(
-            bgcolor=theme.ACCENT if primary else theme.TRANSPARENT,
-            color=theme.ON_ACCENT if primary else theme.ACCENT,
-            overlay_color=theme.TRANSPARENT, shadow_color=theme.TRANSPARENT,
-            mouse_cursor=ft.MouseCursor.CLICK,
-            side=ft.BorderSide(0, theme.TRANSPARENT),
-            shape=ft.RoundedRectangleBorder(radius=5),
+            bgcolor={
+                ft.ControlState.DEFAULT: theme.ACCENT if primary else theme.SECONDARY,
+                ft.ControlState.HOVERED: theme.ACCENT_HOVER if primary else theme.SECONDARY_HOVER,
+                ft.ControlState.PRESSED: theme.ACCENT_ACTIVE if primary else theme.SECONDARY_ACTIVE,
+                ft.ControlState.DISABLED: theme.SURFACE,
+            },
+            color={ft.ControlState.DEFAULT: theme.ON_ACCENT if primary else theme.ON_SECONDARY,
+                   ft.ControlState.DISABLED: theme.MUTED},
+            overlay_color={ft.ControlState.FOCUSED: theme.opacity(0.16, theme.ACCENT),
+                           ft.ControlState.DEFAULT: theme.TRANSPARENT},
+            elevation=0, shadow_color=theme.TRANSPARENT,
+            mouse_cursor={ft.ControlState.DEFAULT: ft.MouseCursor.CLICK,
+                          ft.ControlState.DISABLED: ft.MouseCursor.BASIC},
+            side=ft.BorderSide(0 if primary else 1, theme.BORDER),
+            shape=ft.RoundedRectangleBorder(radius=8),
             padding=ft.Padding.symmetric(horizontal=14),
         ), **kwargs,
     )
 
 
+def launcher_tab(label: str, on_click: Callable) -> SimpleButton:
+    button = launcher_button(label, on_click)
+    select_tab(button, False)
+    return button
+
+
+def select_tab(button: SimpleButton, selected: bool) -> None:
+    """Apply the classic navigation's quiet, visible selection treatment."""
+    button.style.bgcolor = {
+        ft.ControlState.DEFAULT: theme.opacity(0.16, theme.ACCENT) if selected else theme.TRANSPARENT,
+        ft.ControlState.HOVERED: theme.opacity(0.22 if selected else 0.08, theme.ACCENT),
+    }
+    button.style.side = ft.BorderSide(0, theme.TRANSPARENT)
+    button.content.color = None
+    button.style.color = {ft.ControlState.DEFAULT: theme.ACCENT if selected else theme.MUTED,
+                          ft.ControlState.DISABLED: theme.MUTED}
+
+
 def launcher_pill(label: str, on_click: Callable | None, *, icon=None, primary: bool = False,
                   tooltip: str | None = None, **kwargs) -> ft.Container:
-    """Standard frosted pill button matching Gr8 Launcher cards and toolbars."""
-    fg = theme.ON_ACCENT if primary else theme.ACCENT
-    bg = theme.ACCENT if primary else theme.SURFACE
+    """Classic compact action, with the container API used by update feedback."""
+    fg = theme.ON_ACCENT if primary else theme.ON_SECONDARY
+    bg = theme.ACCENT if primary else theme.SECONDARY
     controls: list[ft.Control] = []
     if icon is not None:
         controls.append(ft.Icon(icon, size=14, color=fg))
-    controls.append(ft.Text(label, font_family="ps", color=fg, size=13, weight=ft.FontWeight.BOLD if primary else ft.FontWeight.NORMAL))
+    controls.append(ft.Text(label, color=fg, size=13, weight=ft.FontWeight.W_600))
     return ft.Container(
         bgcolor=bg,
-        border_radius=5,
-        padding=ft.Padding.symmetric(horizontal=12, vertical=8),
+        border_radius=8, height=36,
+        border=ft.Border.all(0 if primary else 1, theme.BORDER),
+        padding=ft.Padding.symmetric(horizontal=12),
         ink=True,
         tooltip=tooltip,
         content=ft.Row(
@@ -96,9 +127,9 @@ def launcher_pill(label: str, on_click: Callable | None, *, icon=None, primary: 
 
 
 def rounded_artwork(content: ft.Control, *, size: int) -> ft.Container:
-    """Clip artwork to the launcher's 5 px corners on every renderer."""
+    """Clip artwork to the classic icon corners on every renderer."""
     return ft.Container(
-        content=content, width=size, height=size, border_radius=5,
+        content=content, width=size, height=size, border_radius=8,
         clip_behavior=ft.ClipBehavior.ANTI_ALIAS, alignment=ft.Alignment.CENTER,
     )
 
@@ -113,35 +144,38 @@ def launcher_asset_icon(src: str, *, color: str | None = None, **kwargs) -> ft.I
 
 def launcher_back_button(on_click: Callable, *, label: str = "Back", tooltip: str | None = None,
                          **kwargs) -> SimpleButton:
-    """Use the compact chevron and label from the Add Account page."""
+    """Use the classic settings' compact arrow and system-font label."""
     return SimpleButton(
         ft.Row([
-            ft.Icon(ft.Icons.ARROW_BACK_IOS_NEW_ROUNDED, color=theme.ACCENT, size=14),
-            ft.Text(label, font_family="ps", color=theme.ACCENT, size=15),
+            ft.Icon(ft.Icons.ARROW_BACK, color=theme.MUTED, size=20),
+            ft.Text(label, color=theme.TEXT, size=13),
         ], spacing=6, tight=True, vertical_alignment=ft.CrossAxisAlignment.CENTER),
         on_click=on_click, tooltip=tooltip,
         style=ft.ButtonStyle(
-            bgcolor=theme.TRANSPARENT, overlay_color=theme.TRANSPARENT,
+            bgcolor={ft.ControlState.DEFAULT: theme.TRANSPARENT, ft.ControlState.HOVERED: theme.CARD_HOVER},
+            overlay_color=theme.opacity(0.12, theme.ACCENT),
             shadow_color=theme.TRANSPARENT, mouse_cursor=ft.MouseCursor.CLICK,
             side=ft.BorderSide(0, theme.TRANSPARENT),
-            shape=ft.RoundedRectangleBorder(radius=5),
+            shape=ft.RoundedRectangleBorder(radius=8),
             padding=ft.Padding.symmetric(horizontal=12, vertical=8),
         ), **kwargs,
     )
 
 
 def launcher_icon_button(*, icon, on_click: Callable, tooltip: str, primary: bool = False, **kwargs) -> ft.IconButton:
-    """Compact launcher actions with no hover fill and a consistent cursor."""
+    """Compact classic actions with visible hover and keyboard focus feedback."""
     defaults = {
         "icon": icon, "on_click": on_click, "tooltip": tooltip,
-        "icon_color": theme.ON_ACCENT if primary else theme.ACCENT,
+        "icon_color": theme.ON_ACCENT if primary else theme.MUTED,
         "bgcolor": theme.ACCENT if primary else theme.TRANSPARENT,
         "icon_size": 20, "width": 36, "height": 36,
         "mouse_cursor": ft.MouseCursor.CLICK,
         "style": ft.ButtonStyle(
-            bgcolor=theme.ACCENT if primary else theme.TRANSPARENT, overlay_color=theme.TRANSPARENT,
+            bgcolor={ft.ControlState.DEFAULT: theme.ACCENT if primary else theme.TRANSPARENT,
+                     ft.ControlState.HOVERED: theme.ACCENT_HOVER if primary else theme.CARD_HOVER},
+            overlay_color=theme.opacity(0.12, theme.ACCENT),
             shadow_color=theme.TRANSPARENT, mouse_cursor=ft.MouseCursor.CLICK,
-            shape=ft.RoundedRectangleBorder(radius=5), padding=6,
+            shape=ft.RoundedRectangleBorder(radius=8), padding=6,
         ),
     }
     defaults.update(kwargs)
@@ -155,10 +189,7 @@ def search_input(hint_text: str = "Search", *, on_change: Callable | None = None
         "hint_text": hint_text,
         "expand": True,
         "hint_style": ft.TextStyle(color=theme.MUTED),
-        "border": {
-            state: ft.OutlineInputBorder(border_radius=5, side=ft.BorderSide(0, theme.TRANSPARENT))
-            for state in (ft.ControlState.DEFAULT, ft.ControlState.FOCUSED, ft.ControlState.DISABLED)
-        },
+        "height": 48,
         "prefix_icon": ft.Icons.SEARCH_SHARP,
         "on_change": on_change,
         "on_submit": on_submit,
@@ -167,12 +198,11 @@ def search_input(hint_text: str = "Search", *, on_change: Callable | None = None
     return SimpleInput(**defaults)
 
 
-def card_surface(content: ft.Control, *, glow_color: str = theme.GLOW, horizontal_padding: int = 16,
+def card_surface(content: ft.Control, *, glow_color: str | None = None, horizontal_padding: int = 16,
                  margin_bottom: int = 8, key: ft.ValueKey | None = None, data=None) -> ft.Container:
-    """Standardized acrylic card surface matching profile cards and mod rows."""
+    """Use the classic profile surface for mods, packs, and version rows."""
     from ui_profiles import profile_card_surface
-    surface = profile_card_surface(content, glow_color=glow_color, horizontal_padding=horizontal_padding)
-    surface.bgcolor = ft.Colors.with_opacity(0.18, theme.BLACK)
+    surface = profile_card_surface(content, glow_color=glow_color or theme.GLOW, horizontal_padding=horizontal_padding)
     if margin_bottom:
         surface.margin = ft.Margin.only(bottom=margin_bottom)
     if key is not None:
@@ -194,14 +224,15 @@ class AcrylicSelector(ft.PopupMenuButton):
         self._pixel = pixel
         self._prefix = prefix
         self._label = ft.Text(hint, size=16 if pixel else 13, font_family="ps" if pixel else None,
-                              color=theme.ACCENT, expand=True, max_lines=1, overflow=ft.TextOverflow.ELLIPSIS)
+                              color=theme.TEXT, expand=True, max_lines=1, overflow=ft.TextOverflow.ELLIPSIS)
         row_controls: list[ft.Control] = []
         if prefix:
             row_controls.append(ft.Text(prefix, size=16 if pixel else 13, font_family="ps" if pixel else None, color=theme.MUTED))
-        row_controls.extend([self._label, ft.Icon(ft.Icons.EXPAND_MORE_SHARP, color=theme.ACCENT, size=18)])
+        row_controls.extend([self._label, ft.Icon(ft.Icons.EXPAND_MORE_SHARP, color=theme.MUTED, size=18)])
         super().__init__(
             content=ft.Container(
                 height=48, bgcolor=theme.SURFACE, border_radius=5,
+                border=ft.Border.all(1, theme.BORDER),
                 clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
                 padding=ft.Padding.symmetric(horizontal=12, vertical=10),
                 content=ft.Row(row_controls, spacing=8),
@@ -210,7 +241,7 @@ class AcrylicSelector(ft.PopupMenuButton):
             menu_position=ft.PopupMenuPosition.UNDER,
             size_constraints=ft.BoxConstraints(min_width=width, max_width=width),
             shape=ft.RoundedRectangleBorder(radius=5), clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
-            style=ft.ButtonStyle(overlay_color=theme.TRANSPARENT, mouse_cursor=ft.MouseCursor.CLICK),
+            style=ft.ButtonStyle(overlay_color=theme.opacity(0.12, theme.ACCENT), mouse_cursor=ft.MouseCursor.CLICK),
             tooltip=tooltip or hint,
         )
         self.refresh_options(options, value)
@@ -224,7 +255,7 @@ class AcrylicSelector(ft.PopupMenuButton):
                 key=ft.ValueKey(key), padding=0, height=46,
                 content=ft.Container(
                     width=self.width, height=46, padding=ft.Padding.symmetric(horizontal=14),
-                    bgcolor=ft.Colors.with_opacity(0.58, theme.BACKGROUND), blur=ft.Blur(14, 14),
+                    bgcolor=theme.opacity(0.88, theme.SURFACE), blur=ft.Blur(14, 14),
                     clip_behavior=ft.ClipBehavior.HARD_EDGE,
                     content=ft.Row([
                         ft.Text(label, color=theme.ACCENT if key == value else theme.TEXT_SECONDARY, size=14,

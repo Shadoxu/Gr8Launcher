@@ -1,4 +1,4 @@
-"""Frosted profile cards with smooth edge scrolling and an eased drop."""
+"""Classic profile cards with smooth edge scrolling and an eased drop."""
 
 import asyncio
 from collections.abc import Callable
@@ -512,13 +512,12 @@ class ProfileList(ft.Container):
 
 
 def profile_card_surface(content, *, glow_color, selected=False, horizontal_padding=14):
-    """Use the same clipped frosted glass for resting and dragged cards.
+    """Use the classic rounded surface for resting and dragged cards.
 
-    Paint the tint inside the backdrop filter so opacity layers do not sample
-    and composite the card's own dark background twice. Keep the outer margin
-    outside the filter and draw the selected glow independently of the blur.
+    Keep the selection layer and padded body stable while dragging, so canceling
+    restores the card without rebuilding its contents or losing focus.
     """
-    padding = ft.Padding.symmetric(horizontal=horizontal_padding, vertical=10)
+    padding = ft.Padding.symmetric(horizontal=horizontal_padding, vertical=12)
 
     # Fixed-depth edge gradients stretch with the client layout. A canvas
     # resize callback queues redraws with old dimensions during window drags,
@@ -529,7 +528,7 @@ def profile_card_surface(content, *, glow_color, selected=False, horizontal_padd
             gradient=ft.LinearGradient(
                 begin=begin, end=end,
                 colors=[
-                    ft.Colors.with_opacity(alpha, glow_color)
+                    theme.opacity(alpha, glow_color)
                     for alpha in (0.16, 0.14, 0.09, 0.04, 0.01, 0)
                 ],
                 stops=[0, 0.2, 0.4, 0.6, 0.8, 1],
@@ -554,11 +553,20 @@ def profile_card_surface(content, *, glow_color, selected=False, horizontal_padd
         ft.Container(padding=padding, content=content),
     ])
     return ft.Container(
-        border_radius=5,
+        border_radius=12,
+        border=ft.Border.all(1, theme.ACCENT if selected else theme.BORDER),
         clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
         bgcolor=theme.SURFACE,
-        blur=ft.Blur(5, 5),
         content=content,
+    )
+
+
+def scroll_fade_shader(enabled: bool = True) -> ft.LinearGradient:
+    """Fade scrollable content while keeping fixed controls fully visible."""
+    return ft.LinearGradient(
+        begin=ft.Alignment.TOP_CENTER, end=ft.Alignment.BOTTOM_CENTER,
+        colors=[theme.MASK_OPAQUE, theme.MASK_TRANSPARENT if enabled else theme.MASK_OPAQUE],
+        stops=[SCROLL_FADE_START, 1.0],
     )
 
 
@@ -568,12 +576,7 @@ def profile_list_surface(view: ft.Control):
         content=view,
         expand=True,
         blend_mode=ft.BlendMode.DST_IN,
-        shader=ft.LinearGradient(
-            begin=ft.Alignment.TOP_CENTER,
-            end=ft.Alignment.BOTTOM_CENTER,
-            colors=[theme.MASK_OPAQUE, theme.MASK_TRANSPARENT],
-            stops=[SCROLL_FADE_START, 1.0],
-        ),
+        shader=scroll_fade_shader(),
     )
 
 
@@ -582,17 +585,17 @@ def profile_row(profile: dict, *, icon: ft.Control, badges: list[ft.Control],
                 selected: bool = False, body_builder: Callable | None = None) -> ft.Container:
     """Build the Library profile row, with actions supplied by its screen."""
     icon_box = ft.Container(
-        width=36, height=36, border_radius=0, bgcolor=theme.SURFACE_STRONG,
+        width=36, height=36, border_radius=8, bgcolor=theme.SURFACE_STRONG,
         alignment=ft.Alignment.CENTER, content=icon,
     )
     info = ft.Column([
         ft.Row([
-            ft.Text(profile.get("name", "Unnamed Profile"), font_family="ps",
-                    color=theme.TEXT, size=16, weight=ft.FontWeight.W_500,
+            ft.Text(profile.get("name", "Unnamed Profile"),
+                    color=theme.TEXT, size=14, weight=ft.FontWeight.W_500, expand=True, expand_loose=True,
                     max_lines=1, overflow=ft.TextOverflow.ELLIPSIS),
             *badges,
         ], spacing=8, vertical_alignment=ft.CrossAxisAlignment.CENTER),
-        ft.Text(details, size=12, color=theme.NAV_MUTED, max_lines=1,
+        ft.Text(details, size=12, color=theme.MUTED, max_lines=1,
                 overflow=ft.TextOverflow.ELLIPSIS),
     ], spacing=2, expand=True)
     body = body_builder(icon_box, info) if body_builder else ft.Row(

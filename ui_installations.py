@@ -10,6 +10,7 @@ import tkinter as tk
 from tkinter import filedialog
 import flet as ft
 from ui_controls import LegacySelector
+from ui_profile_assets import ProfileIconField
 from launcher import get_mod_loader, minecraft_directory, get_profile_version_id
 from storage import save_installations
 from state import active_page
@@ -44,6 +45,7 @@ def build_installation_editor(
     online_available=True,
     show_dialog_with_blur=None,
     close_dialog_with_blur=None,
+    features=None,
 ):
     if show_dialog_with_blur is None:
         def show_dialog_with_blur(dlg):
@@ -84,13 +86,7 @@ def build_installation_editor(
         label='Extra Java arguments', value=existing_profile.get('jvm_arguments', ''),
         hint_text='e.g. -Xmx4G -XX:+UseG1GC', color=theme['text_primary'],
         border_color=theme['border'], focused_border_color=theme['btn_primary'], border_radius=8, expand=True)
-    icon_choices = [('icon_blocks/grass_block.png', 'Grass Block'), ('icon_blocks/diamond_ore.png', 'Diamond Ore'),
-                    ('icon_blocks/crafting_table.png', 'Crafting Table'), ('icon_faces/creeper.png', 'Creeper')]
-    existing_icon = existing_profile.get('icon') or 'icon_blocks/grass_block.png'
-    if existing_icon not in dict(icon_choices):
-        icon_choices.append((existing_icon, 'Custom icon'))
-    icon_field = LegacySelector(label='Profile icon', value=existing_icon,
-                            options=[ft.DropdownOption(key=key, text=label) for key, label in icon_choices], expand=True)
+    icon_field = ProfileIconField(page, existing_profile, file_picker=getattr(features, "file_picker", None), notify=notify)
     loader_field = LegacySelector(
         label="Type",
         value=initial_loader,
@@ -492,7 +488,12 @@ def build_installation_editor(
             saved_profile["id"] = saved_profile.get("id", uuid.uuid4().hex)
             saved_profile["name"] = name
             saved_profile["jvm_arguments"] = (jvm_arguments_field.value or "").strip()
-            saved_profile["icon"] = icon_field.value or "icon_blocks/grass_block.png"
+            try:
+                saved_profile["icon"] = icon_field.saved_value()
+            except (OSError, ValueError) as error:
+                set_form_error(f"Could not save the profile icon: {error}")
+                page.update()
+                return
             if final_banner:
                 persisted = banners.save_custom_banner_image(saved_profile["id"], final_banner)
                 saved_profile["custom_banner"] = persisted or final_banner
@@ -670,7 +671,12 @@ def build_installation_editor(
             "custom_banner": saved_custom_banner,
         }
         saved_profile['jvm_arguments'] = (jvm_arguments_field.value or '').strip()
-        saved_profile['icon'] = icon_field.value or 'icon_blocks/grass_block.png'
+        try:
+            saved_profile['icon'] = icon_field.saved_value()
+        except (OSError, ValueError) as error:
+            set_form_error(f"Could not save the profile icon: {error}")
+            page.update()
+            return
         try:
             profile_creation.save_new_profile(saved_profile, minecraft_directory, instance_folder_field.value, storage)
         except (OSError, ValueError) as error:

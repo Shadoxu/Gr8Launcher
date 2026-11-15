@@ -2,8 +2,13 @@
 
 Open **Mods → Content type → Modpacks** to browse complete packs or import a
 downloaded archive. The content selector uses the same acrylic field as the
-provider and sort controls. The sidebar, title bar, and shared progress bar stay
+provider and sort controls. The classic top navigation, title bar, and shared progress bar stay
 available.
+
+Pack browsing, installed instances, details, versions, and install reviews use
+the same classic card surfaces, system-font text, and rounded actions as Mods
+and Profiles. Queries, provider selections, and scroll positions survive tab
+navigation.
 
 ## Discover and details
 

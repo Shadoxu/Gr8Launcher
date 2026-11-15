@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import fields, is_dataclass
+from dataclasses import fields, is_dataclass, replace
 from pathlib import Path
 from typing import Callable
 
@@ -18,6 +18,8 @@ import ui_theme as theme
 from ui_dialogs import ProfileDialogHost
 from ui_mods import ModsPage
 from ui_motion import StaggeredReveal
+from ui_controls import launcher_button, search_input
+from ui_profile_assets import ProfileIconField, profile_icon, profile_badges, profile_summary
 from ui_progress import ProgressHost
 from ui_toasts import ToastHost
 from ui_updates import UpdateController
@@ -38,6 +40,9 @@ class LegacyFeatures:
         self.progress = ProgressHost(page)
         self.toasts = ToastHost(page, title_bar_height=64)
         self.reveal = StaggeredReveal(page, ft.Container())
+        self.file_picker = ft.FilePicker()
+        page.services.append(self.file_picker)
+        self.library = None
         self.updater = None
         self.mods = ModsPage(
             page, get_profiles=load_ui_installations, selected_profile=self.selected_profile,
@@ -45,6 +50,7 @@ class LegacyFeatures:
             is_running=lambda: bool(state.launcher_log_state.get("running") or (self.updater and self.updater.applying)),
             notify=self.notify, dialogs=lambda: self.dialogs, open_folder=self.open_folder,
             create_profile=lambda: self.navigate("new_installation"), profile_icon=self.profile_icon,
+            profile_badges=profile_badges, profile_details=profile_summary,
             on_changed=self.profiles_changed, progress=self.progress, entrance=self.reveal,
             runtime_directory=Path(launcher.minecraft_directory), on_play=self.play_profile,
         )
@@ -65,53 +71,81 @@ class LegacyFeatures:
         self.updater.on_state_change = self.refresh_update_badge
 
     def apply_theme(self, palette: dict[str, str]) -> None:
-        before = {name: value for name, value in vars(theme).items() if name.isupper() and isinstance(value, str)}
         theme.apply_legacy_theme(palette)
-        colors = {value: getattr(theme, name) for name, value in before.items()}
-        visited = set()
+        visited = {}
 
         def recolor(value):
-            if isinstance(value, str):
-                return colors.get(value, value)
+            if isinstance(value, theme.ThemeColor):
+                current = theme.resolve_color(value)
+                return value if current == value else current
             if isinstance(value, list):
-                return [recolor(item) for item in value]
+                updated = [recolor(item) for item in value]
+                return value if all(a is b for a, b in zip(value, updated)) else updated
+            if isinstance(value, tuple):
+                updated = tuple(recolor(item) for item in value)
+                return value if all(a is b for a, b in zip(value, updated)) else updated
             if isinstance(value, dict):
-                return {key: recolor(item) for key, item in value.items()}
-            if is_dataclass(value) and id(value) not in visited:
-                visited.add(id(value))
+                updated = {key: recolor(item) for key, item in value.items()}
+                return value if all(updated[key] is item for key, item in value.items()) else updated
+            if is_dataclass(value):
+                if id(value) in visited:
+                    return visited[id(value)]
+                visited[id(value)] = value
+                changes = {}
                 for field in fields(value):
-                    if field.name.startswith("_") or not field.init or field.metadata.get("skip"):
+                    # Button styles have Flet's "skip" metadata, but contain
+                    # visible colors. Exclude application data and internals.
+                    if field.name.startswith("_") or not field.init or field.name in ("data", "key"):
                         continue
                     current = getattr(value, field.name)
                     updated = recolor(current)
-                    if isinstance(current, (str, list, dict)) and updated != current:
-                        setattr(value, field.name, updated)
+                    if updated is not current:
+                        changes[field.name] = updated
+                if not isinstance(value, ft.Control) or hasattr(value, "_frozen"):
+                    # Flet freezes newly reconciled menu items and their children.
+                    # Replace them through their mutable parent instead of changing
+                    # the frozen snapshot; shared references use the same copy.
+                    updated = replace(value, **changes) if changes else value
+                    visited[id(value)] = updated
+                    return updated
+                for name, updated in changes.items():
+                    setattr(value, name, updated)
             return value
 
         updater_controls = [value for value in vars(self.updater).values() if isinstance(value, ft.Control)]
         for control in (self.mods, self.progress, self.toasts, *updater_controls):
             recolor(control)
-        self.mods._row_cache.clear()
+        # Cached rows keep the same semantic colors, including offscreen rows.
+        for cache in (self.mods._row_cache, self.mods.modpacks_page._row_cache):
+            for key, (signature, control) in list(cache.items()):
+                cache[key] = (signature, recolor(control))
+        self.mods._render()
 
     def edit_latest_profile(self) -> None:
         if self.busy or self.dialogs is None:
             self.notify("Wait for the current operation to finish.", "warning")
             return
         options = storage.load_latest_release_options()
-        arguments = ft.TextField(label="Extra Java arguments", value=options.get("jvm_arguments", ""),
-                                 color=theme.TEXT, border_color=theme.MUTED)
+        arguments = search_input(label="Extra Java arguments", value=options.get("jvm_arguments", ""),
+                                 prefix_icon=None, expand=False)
+        icon = ProfileIconField(self.page, options, file_picker=self.file_picker, notify=self.notify)
 
         def save(event):
-            if not storage.save_latest_release_options({**options, "jvm_arguments": arguments.value or ""}):
+            try:
+                saved_icon = icon.saved_value()
+            except (OSError, ValueError) as error:
+                self.notify(f"Could not save the profile icon: {error}", "error")
+                return
+            if not storage.save_latest_release_options({**options, "jvm_arguments": arguments.value or "", "icon": saved_icon}):
                 self.notify("Could not save the Latest Release options.", "error")
                 return
             self.dialogs.close()
             self.profiles_changed()
             self.notify("Latest Release options saved.", "success")
 
-        self.dialogs.show(arguments, title=ft.Text("Latest Release", color=theme.TEXT, size=20),
-            actions=[ft.TextButton("Cancel", on_click=lambda e: self.dialogs.close()),
-                     ft.Button("Save", on_click=save)], on_cancel=lambda: None, width=508, height=250)
+        self.dialogs.show(ft.Column([icon, arguments], spacing=16), title=ft.Text("Latest Release", color=theme.TEXT, size=20, weight=ft.FontWeight.BOLD),
+            actions=[launcher_button("Cancel", lambda e: self.dialogs.close()),
+                     launcher_button("Save", save, primary=True)], on_cancel=lambda: None, width=508, height=340)
 
     @property
     def busy(self) -> bool:
@@ -140,7 +174,11 @@ class LegacyFeatures:
             return
         self.closed = True
         self.updater.stop()
+        if self.dialogs:
+            self.dialogs.close(animate=False)
         self.mods.leave()
+        if self.library:
+            self.library.leave()
         self.toasts.close()
         self.progress.close()
         self.presence.stop()
@@ -173,6 +211,19 @@ class LegacyFeatures:
             self.notify("Could not save the profile order.", "error")
             return
         self.profiles_changed()
+
+    def reorder_profiles(self, profile_ids: list[str]) -> bool:
+        if self.busy:
+            self.notify("Wait for the current operation to finish.", "warning")
+            return False
+        current = [profile["id"] for profile in load_ui_installations()]
+        if len(profile_ids) != len(set(profile_ids)) or set(profile_ids) != set(current):
+            self.notify("The profiles changed. Refresh the list before reordering.", "warning")
+            return False
+        if not storage.save_profile_order(profile_ids):
+            self.notify("Could not save the profile order.", "error")
+            return False
+        return True
 
     def selected_profile(self) -> dict | None:
         key = state.launch_selection.get("key")
@@ -209,22 +260,17 @@ class LegacyFeatures:
 
     @staticmethod
     def profile_icon(profile: dict) -> ft.Control:
-        source = str(profile.get("icon") or "icon_blocks/grass_block.png")
-        path = Path(source)
-        if not path.is_file():
-            path = Path(__file__).resolve().parent / ".assets" / "icons" / source
-        if path.is_file():
-            return ft.Image(src=path.read_bytes(), width=32, height=32, fit=ft.BoxFit.CONTAIN,
-                            filter_quality=ft.FilterQuality.NONE)
-        return ft.Icon(ft.Icons.FOLDER_SPECIAL if profile.get("is_instance") else ft.Icons.INVENTORY_2,
-                       size=24, color=theme.MUTED)
+        return profile_icon(profile)
 
-    def enter(self, name: str, profile_id=None) -> None:
+    def enter(self, name: str, profile_id=None, *, defer_load: bool = False) -> None:
+        self.reveal.finish(update=False)
+        if self.library and name != "installations":
+            self.library.leave()
         if self.skin_viewer:
             self.skin_viewer.suspend()
             self.skin_viewer = None
         if name == "mods":
-            self.mods.enter(profile_id)
+            self.mods.enter(profile_id, defer_load=defer_load)
         else:
             self.mods.leave()
         self.presence.set_page({"installations": "library", "options_accounts": "accounts"}.get(

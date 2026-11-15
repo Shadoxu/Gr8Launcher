@@ -1,63 +1,41 @@
-"""Shared launcher palette. Edit these variables, then restart the launcher.
+"""Semantic colors shared by the classic shell and retained launcher features."""
 
-BACKGROUND, ACCENT, GLOW, and TEXT are the main palette controls. Background
-and active-switch shades below follow them; each named role can also be set
-to its own color. Status and loader colors are deliberately separate roles.
-"""
+from __future__ import annotations
 
 import flet as ft
 
-
-def _shade(color: str, red: int, green: int, blue: int) -> str:
-    """Offset RGB channels, preserving Classic's existing surface shades."""
-    channels = (int(color[index:index + 2], 16) for index in (1, 3, 5))
-    return "#" + "".join(
-        f"{max(0, min(255, channel + offset)):02x}"
-        for channel, offset in zip(channels, (red, green, blue))
-    )
+from colors import DEFAULT_THEME, get_theme
 
 
-# Main palette: start here when trying a different look.
-BACKGROUND = "#182842"
-ACCENT = "#f5de9a"
-GLOW = "#454641"
-TEXT = "#ffffff"
-ON_ACCENT = BACKGROUND
+class ThemeColor(str):
+    """Remember a color's role when two palette tokens share the same hex value."""
 
-# Text and icons. Separate roles preserve the current visual hierarchy.
-MUTED = "#929db1"
-NAV_MUTED = "#747e95"
-TEXT_SECONDARY = "#d1d7e2"
-TEXT_HEADING = "#e5ebf4"
-TEXT_DETAIL = "#c5cedc"
-TEXT_STATUS = "#d6dfea"
-TEXT_CODE = "#d6e1f0"
-TEXT_UPDATE = "#d7dce7"
-TEXT_LOG = "#cfd8dc"
-TEXT_SUPPORT = "#a0aec0"
-TEXT_PLACEHOLDER = "#8b97ab"
-TEXT_CAPTION = "#9ba3b4"
-TEXT_FOOTNOTE = "#50617a"
-ICON_MUTED = "#8a94a6"
-ICON_CLOSE = "#bac6d8"
-TEXT_DIM = ft.Colors.with_opacity(0.70, TEXT)
-TEXT_HINT = ft.Colors.with_opacity(0.24, TEXT)
+    def __new__(cls, value: str, role: str, alpha: float | None = None):
+        color = super().__new__(cls, value)
+        color.role = role
+        color.alpha = alpha
+        return color
 
-# Surfaces and effects. Transparent fills naturally show the page palette.
+    def __getnewargs__(self) -> tuple:
+        return str(self), self.role, self.alpha
+
+
+def opacity(alpha: float, color: str) -> str:
+    """Apply Flet opacity while retaining the selected theme's color role."""
+    value = ft.Colors.with_opacity(alpha, color)
+    return ThemeColor(value, color.role, alpha) if isinstance(color, ThemeColor) else value
+
+
+def resolve_color(color: ThemeColor) -> str:
+    current = globals().get(color.role, color)
+    return opacity(color.alpha, current) if color.alpha is not None else current
+
+
 BLACK = "#000000"
 TRANSPARENT = ft.Colors.TRANSPARENT
-SURFACE = ft.Colors.BLACK_26
-SURFACE_STRONG = ft.Colors.BLACK_38
 SCRIM = ft.Colors.BLACK_54
-AUTH_INACTIVE = _shade(BACKGROUND, -10, -12, -16)
-SWITCH_TRACK = _shade(BACKGROUND, 19, 19, 19)
-SWITCH_INACTIVE_TRACK = _shade(BACKGROUND, 14, 14, 13)
-SWITCH_ACTIVE_TRACK = _shade(ACCENT, -143, -130, -90)
-TOAST_BACKGROUND = _shade(BACKGROUND, 37, 43, 53)
-QUOTE_BACKGROUND = _shade(BACKGROUND, 3, 3, 3)
-CODE_BACKGROUND = _shade(BACKGROUND, -6, -10, -15)
 
-# Feedback retains its meaning across palette experiments.
+# Feedback and Minecraft loader badges keep their meaning across themes.
 SUCCESS = "#81c784"
 SUCCESS_BRIGHT = "#34d399"
 DANGER = "#e57373"
@@ -71,38 +49,41 @@ TOAST_ERROR = "#ff9292"
 LOG_ERROR = "#ef5350"
 LOG_WARNING = "#ffca28"
 LOG_INFO = "#90caf9"
-
-# Minecraft loader badges.
 LOADER_FABRIC = "#82b1ff"
 LOADER_FORGE = WARNING
 LOADER_NEOFORGE = "#ff8a65"
 LOADER_QUILT = "#ce93d8"
 LOADER_OTHER = "#b0bec5"
-
-# Alpha masks control visibility rather than the visible theme palette.
 MASK_OPAQUE = "#ffffffff"
 MASK_TRANSPARENT = "#00ffffff"
 
 
 def apply_legacy_theme(palette: dict[str, str]) -> None:
-    """Make retained feature controls follow the original launcher's theme."""
-    values = {
-        "BACKGROUND": palette["bg"], "ACCENT": palette["btn_primary"],
-        "GLOW": palette["card_hover"], "TEXT": palette["text_primary"],
-        "ON_ACCENT": palette["btn_primary_text"], "MUTED": palette["text_secondary"],
-        "NAV_MUTED": palette["text_muted"], "SURFACE": palette["surface"],
-        "SURFACE_STRONG": palette["card"], "TOAST_BACKGROUND": palette["card"],
-        "CODE_BACKGROUND": palette["surface"], "QUOTE_BACKGROUND": palette["card"],
-        "AUTH_INACTIVE": palette["surface"], "SWITCH_TRACK": palette["border"],
-        "SWITCH_INACTIVE_TRACK": palette["surface"], "SWITCH_ACTIVE_TRACK": palette["btn_primary"],
-        "ICON_MUTED": palette["text_secondary"], "ICON_CLOSE": palette["text_secondary"],
+    """Apply the same classic tokens to every retained feature control."""
+    roles = {
+        "BACKGROUND": "bg", "SURFACE": "surface", "SURFACE_STRONG": "card",
+        "CARD_HOVER": "card_hover", "GLOW": "card_hover", "BORDER": "border",
+        "ACCENT": "btn_primary", "ACCENT_HOVER": "btn_primary_hover",
+        "ACCENT_ACTIVE": "btn_primary_active", "ON_ACCENT": "btn_primary_text",
+        "SECONDARY": "btn_secondary", "SECONDARY_HOVER": "btn_secondary_hover",
+        "SECONDARY_ACTIVE": "btn_secondary_active", "ON_SECONDARY": "btn_secondary_text",
+        "TEXT": "text_primary", "MUTED": "text_secondary", "NAV_MUTED": "text_muted",
+        "TOAST_BACKGROUND": "card", "CODE_BACKGROUND": "surface", "QUOTE_BACKGROUND": "card",
+        "AUTH_INACTIVE": "surface", "SWITCH_TRACK": "border",
+        "SWITCH_INACTIVE_TRACK": "surface", "SWITCH_ACTIVE_TRACK": "btn_primary",
+        "ICON_MUTED": "text_secondary", "ICON_CLOSE": "text_secondary",
     }
-    values.update({name: palette["text_primary"] for name in (
+    roles.update({name: "text_primary" for name in (
         "TEXT_HEADING", "TEXT_DETAIL", "TEXT_STATUS", "TEXT_CODE", "TEXT_UPDATE", "TEXT_LOG",
     )})
-    values.update({name: palette["text_secondary"] for name in (
+    roles.update({name: "text_secondary" for name in (
         "TEXT_SECONDARY", "TEXT_SUPPORT", "TEXT_PLACEHOLDER", "TEXT_CAPTION", "TEXT_FOOTNOTE",
     )})
-    values["TEXT_DIM"] = ft.Colors.with_opacity(0.70, palette["text_primary"])
-    values["TEXT_HINT"] = ft.Colors.with_opacity(0.24, palette["text_primary"])
-    globals().update(values)
+    globals().update({name: ThemeColor(palette[token], name) for name, token in roles.items()})
+    globals().update({
+        "TEXT_DIM": ThemeColor(ft.Colors.with_opacity(0.70, palette["text_primary"]), "TEXT_DIM"),
+        "TEXT_HINT": ThemeColor(ft.Colors.with_opacity(0.55, palette["text_secondary"]), "TEXT_HINT"),
+    })
+
+
+apply_legacy_theme(get_theme(DEFAULT_THEME))

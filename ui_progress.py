@@ -107,7 +107,7 @@ class _SmoothProgressBar(ft.Container):
             # Reuse v1.2.0's feathered beam, tinted with the launcher background.
             gradient=ft.LinearGradient(
                 begin=ft.Alignment.CENTER_LEFT, end=ft.Alignment.CENTER_RIGHT,
-                colors=[ft.Colors.with_opacity(alpha, theme.BACKGROUND)
+                colors=[theme.opacity(alpha, theme.BACKGROUND)
                         for alpha in (0.0, 0.08, 0.22, 0.40, 0.22, 0.08, 0.0)],
                 stops=[0.0, 0.20, 0.38, 0.50, 0.62, 0.80, 1.0],
             ),
@@ -242,7 +242,7 @@ class ProgressHost(ft.Container):
         self._show_text = show_text
         self._idle = ProgressSnapshot("Ready to play", 0.0, "", 0)
         self._last_rendered: tuple[ProgressSnapshot, bool] | None = None
-        self.status_text = ft.Text("Ready to play", font_family="ps", size=13, color=theme.ACCENT,
+        self.status_text = ft.Text("Ready to play", size=13, color=theme.ACCENT,
                                    expand=True, max_lines=1, overflow=ft.TextOverflow.ELLIPSIS)
         self.detail_text = ft.Text("", size=12, color=theme.MUTED, text_align=ft.TextAlign.RIGHT,
                                    max_lines=1, overflow=ft.TextOverflow.ELLIPSIS)

@@ -30,7 +30,8 @@ from ui_controls import (
 from ui_mod_details import markdown, open_link
 from ui_mod_list import ModList
 from ui_motion import StaggeredReveal
-from ui_profiles import ProfileList, profile_card_surface, profile_list_surface
+from ui_profiles import ProfileList, profile_card_surface, profile_list_surface, scroll_fade_shader
+from ui_controls import launcher_tab, select_tab
 from ui_progress import ProgressHost, track_progress
 from ui_scroll_views import ScrollColumn
 
@@ -41,8 +42,9 @@ SORT_OPTIONS = [("downloads", "Popular"), ("relevance", "Relevance"),
                 ("updated", "Recently updated"), ("newest", "Newest")]
 
 
-def _text(value: str, size: int = 13, *, pixel: bool = False, color: str | None = None, **kwargs) -> ft.Text:
-    return ft.Text(value, size=size, color=theme.MUTED if color is None else color, font_family="ps" if pixel else None, **kwargs)
+def _text(value: str, size: int = 13, *, emphasis: bool = False, color: str | None = None, **kwargs) -> ft.Text:
+    kwargs.setdefault("weight", ft.FontWeight.W_600 if emphasis else ft.FontWeight.NORMAL)
+    return ft.Text(value, size=size, color=theme.MUTED if color is None else color, **kwargs)
 
 
 def _update(control: ft.Control) -> None:
@@ -70,7 +72,7 @@ class ModpackInstallReview(ft.Column):
         self.manual_file_ready = manual_file_ready
         self.checking = False
         self.error = ""
-        self.title = _text("Install modpack", 22, pixel=True, color=theme.ACCENT)
+        self.title = _text("Install modpack", 22, emphasis=True, color=theme.ACCENT)
         self.name_input = SimpleInput(value=plan.name, label="Instance name", hint_text="Instance name")
         self.folder_input = SimpleInput(value=folder_name, label="Instance folder", hint_text="Folder name")
         self.name_input.expand = self.folder_input.expand = True
@@ -79,28 +81,29 @@ class ModpackInstallReview(ft.Column):
 
     @property
     def preferred_height(self) -> int:
-        return min(550, 360 + len(self.plan.optional_files) * 42 + len(self.plan.manual_files()) * 48)
+        return min(550, 420 + len(self.plan.optional_files) * 52 + len(self.plan.manual_files()) * 52)
 
     def render(self) -> None:
         selected = tuple(self.optional_paths)
+        count = len(self.plan.selected_files(selected))
         loader = self.plan.loader + (" " + self.plan.loader_version if self.plan.loader_version else "")
         self.controls = [
-            _text(self.plan.name, 20, pixel=True, color=theme.ACCENT, max_lines=2, overflow=ft.TextOverflow.ELLIPSIS),
+            _text(self.plan.name, 20, emphasis=True, color=theme.TEXT, max_lines=2, overflow=ft.TextOverflow.ELLIPSIS),
             _text(f"Pack {self.plan.pack_version} · Minecraft {self.plan.minecraft_version} · {loader}", 13, color=theme.TEXT_SECONDARY),
             ft.Row([self.name_input, self.folder_input], spacing=12),
-            _text(f"{len(self.plan.selected_files(selected))} files · {_size(self.plan.download_size(selected))} to download", 13),
+            _text(f"{count} {'file' if count == 1 else 'files'} · {_size(self.plan.download_size(selected))} to download", 13),
             _text("Creates a separate instance. Play installs any missing Minecraft or loader files.", 12),
         ]
         if self.plan.optional_files:
-            self.controls.append(_text("Optional client files", 15, pixel=True, color=theme.ACCENT))
+            self.controls.append(_text("Optional client files", 15, emphasis=True, color=theme.TEXT))
             self.controls.extend(ft.Checkbox(
                 label=file.label or file.path, value=file.path in self.optional_paths,
                 disabled=self.checking, active_color=theme.ACCENT,
-                on_change=lambda e, path=file.path: self.on_optional_change(e, path),
+                on_change=self._optional_handler(file.path),
             ) for file in self.plan.optional_files)
         manual = self.plan.manual_files(selected)
         if manual:
-            self.controls.append(_text("Manual CurseForge downloads", 15, pixel=True, color=theme.ACCENT))
+            self.controls.append(_text("Manual CurseForge downloads", 15, emphasis=True, color=theme.TEXT))
             self.controls.append(_text("Download these exact files, then select them below to verify them.", 12))
             for file in manual:
                 ready = self.manual_file_ready(file)
@@ -112,6 +115,11 @@ class ModpackInstallReview(ft.Column):
             self.controls.append(launcher_button("Select downloaded files", self.on_manual_files, disabled=self.checking))
         if self.error:
             self.controls.append(_text(self.error, 13, color=theme.DANGER))
+
+    def _optional_handler(self, path: str) -> Callable:
+        async def changed(e) -> None:
+            await self.on_optional_change(e, path)
+        return changed
 
 
 class ModpackDetailsPage(ft.Container):
@@ -136,7 +144,7 @@ class ModpackDetailsPage(ft.Container):
         self.version_offset = 0
         self.operation_phase = "idle"
         self.back_bar = ft.Row([launcher_back_button(lambda e: on_back(), tooltip="Back to Modpacks")])
-        self.title = _text("Modpack", 28, pixel=True, color=theme.ACCENT, max_lines=2, overflow=ft.TextOverflow.ELLIPSIS)
+        self.title = _text("Modpack", 24, emphasis=True, color=theme.TEXT, max_lines=2, overflow=ft.TextOverflow.ELLIPSIS)
         self.subtitle = _text("", 12)
         self.summary = _text("", 13, max_lines=2, overflow=ft.TextOverflow.ELLIPSIS)
         self.icon = ft.Container(width=64, height=64)
@@ -146,8 +154,7 @@ class ModpackDetailsPage(ft.Container):
             self.icon, ft.Column([self.title, self.subtitle, self.summary], expand=True, spacing=5),
             self.install_button, self.cancel_button,
         ], spacing=16, vertical_alignment=ft.CrossAxisAlignment.CENTER), glow_color=theme.GLOW, horizontal_padding=16)
-        self.hero.bgcolor = ft.Colors.with_opacity(0.18, theme.BLACK)
-        self.section_buttons = {key: launcher_button(label, lambda e, name=key: self.set_section(name))
+        self.section_buttons = {key: launcher_tab(label, lambda e, name=key: self.set_section(name))
                                 for key, label in (("overview", "Overview"), ("versions", "Versions"), ("gallery", "Gallery"))}
         self.tabs = ft.Row(list(self.section_buttons.values()), spacing=8)
         self.body = profile_list_surface(ft.Container(expand=True))
@@ -264,8 +271,8 @@ class ModpackDetailsPage(ft.Container):
         self.cancel_button.disabled = self.operation_phase == "cancelling"
         self.install_button.visible = not self.cancel_button.visible
         for key, button in self.section_buttons.items():
-            button.style.bgcolor = theme.SURFACE if key == self.section else theme.TRANSPARENT
-            button.content.color = theme.ACCENT if key == self.section else theme.MUTED
+            select_tab(button, key == self.section)
+        self.body.shader = scroll_fade_shader(self.section != "versions")
         if self.loading or self.error:
             controls = [_text(self.error or "Loading pack details...", 14, color=theme.DANGER if self.error else theme.MUTED)]
             if self.error:
@@ -278,7 +285,7 @@ class ModpackDetailsPage(ft.Container):
             gallery = self.project.get("gallery") or []
             self.body.content = ScrollColumn([
                 ft.Container(content=ft.Image(src=item["url"], fit=ft.BoxFit.CONTAIN, height=220,
-                             error_content=_text("Image unavailable", 12)), border_radius=5,
+                             error_content=_text("Image unavailable", 12)), border_radius=8,
                              clip_behavior=ft.ClipBehavior.ANTI_ALIAS)
                 for item in gallery if isinstance(item, dict) and item.get("url")
             ] or [_text("No screenshots supplied for this pack.", 14)], bottom_fade=True, spacing=16, scroll=ft.ScrollMode.AUTO,
@@ -315,7 +322,7 @@ class ModpackDetailsPage(ft.Container):
                 ", ".join(version.get("game_versions", [])), ", ".join(version.get("loaders", [])),
                 str(version.get("date_published", ""))[:10]]))
             rows.append(card_surface(ft.Row([
-                ft.Column([_text(version.get("name") or version.get("version_number", "Version"), 17, pixel=True, color=theme.ACCENT,
+                ft.Column([_text(version.get("name") or version.get("version_number", "Version"), 15, emphasis=True, color=theme.TEXT,
                                  max_lines=1, overflow=ft.TextOverflow.ELLIPSIS),
                            _text(details, 12, max_lines=2, overflow=ft.TextOverflow.ELLIPSIS)], expand=True, spacing=4),
                 launcher_button("Install", lambda e, selected=version: self._on_install(self.project, selected),
@@ -325,7 +332,7 @@ class ModpackDetailsPage(ft.Container):
         self.version_list.set_cards(rows, footer=_text("No matching pack versions. Try All releases or another search.", 13) if not rows else None)
         self.version_previous.disabled = self.version_offset == 0
         self.version_next.disabled = self.version_offset + self.PAGE_SIZE >= len(versions)
-        self.version_footer.visible = bool(versions)
+        self.version_footer.visible = len(versions) > self.PAGE_SIZE
         self.version_label.value = f"{self.version_offset // self.PAGE_SIZE + 1} / {max(1, (len(versions) + self.PAGE_SIZE - 1) // self.PAGE_SIZE)}"
 
 
@@ -375,13 +382,13 @@ class ModpacksPage(ft.Container):
         self.search_offset = 0
         self._details_open = False
         self._row_cache = {}
-        self.heading = _text("Modpacks", 32, pixel=True, color=theme.ACCENT)
+        self.heading = _text("Modpacks", 24, emphasis=True, color=theme.TEXT)
         self.content_selector = AcrylicSelector(CONTENT_OPTIONS, "modpacks", on_content_change, width=160, tooltip="Content type")
         self.import_button = launcher_button("Import pack", self._import_archive, primary=True)
         self.header = ft.Row([self.heading, self.content_selector, ft.Container(expand=True)],
-                             spacing=16, height=54, vertical_alignment=ft.CrossAxisAlignment.CENTER)
-        self.browse_tab = launcher_button("Discover", lambda e: self.set_view("browse"))
-        self.installed_tab = launcher_button("Installed", lambda e: self.set_view("installed"))
+                             spacing=16, height=52, vertical_alignment=ft.CrossAxisAlignment.CENTER)
+        self.browse_tab = launcher_tab("Discover", lambda e: self.set_view("browse"))
+        self.installed_tab = launcher_tab("Installed", lambda e: self.set_view("installed"))
         self.attribution = _text("Powered by Modrinth", 11)
         self.cancel_button = launcher_button("Cancel", self._cancel_operation, visible=False)
         self.tabs = ft.Row([self.browse_tab, self.installed_tab, ft.Container(expand=True), self.cancel_button, self.attribution], spacing=8)
@@ -624,7 +631,8 @@ class ModpacksPage(ft.Container):
 
     def _empty(self, title: str, description: str, action: ft.Control | None = None) -> None:
         controls = [ft.Icon(ft.Icons.INVENTORY_2_OUTLINED, size=44, color=theme.ACCENT),
-                    _text(title, 22, pixel=True, color=theme.ACCENT), _text(description, 13, text_align=ft.TextAlign.CENTER)]
+                    _text(title, 20, emphasis=True, color=theme.TEXT),
+                    ft.Container(width=560, content=_text(description, 13, text_align=ft.TextAlign.CENTER))]
         if action:
             controls.append(action)
         self.list_view.set_items([], self._row)
@@ -650,8 +658,7 @@ class ModpacksPage(ft.Container):
         self.attribution.value = "Powered by CurseForge" if self.provider == "curseforge" else "Powered by Modrinth"
         self.installed_tab.content.value = f"Installed · {len(packs)}" if packs else "Installed"
         for button, selected in ((self.browse_tab, browse), (self.installed_tab, not browse)):
-            button.style.bgcolor = theme.SURFACE if selected else theme.TRANSPARENT
-            button.content.color = theme.ACCENT if selected else theme.MUTED
+            select_tab(button, selected)
         self.cancel_button.visible = self.busy and self._phase in {"preparing", "installing", "cancelling"}
         self.cancel_button.disabled = self._phase == "cancelling"
         self.status.value = "Canceling modpack installation..." if self._phase == "cancelling" else "Installing modpack..." if self._phase == "installing" else "Reading modpack..." if self._phase == "preparing" else "Finding modpacks..." if self.loading else f"{self.total_hits:,} modpacks" if browse else f"{len(packs)} installed packs"
@@ -746,7 +753,7 @@ class ModpacksPage(ft.Container):
                 )]
             on_open = lambda e: self.open_details(item)
         info = ft.Column([
-            _text(title, 18, pixel=True, color=theme.ACCENT, max_lines=1, overflow=ft.TextOverflow.ELLIPSIS),
+            _text(title, 15, emphasis=True, color=theme.TEXT, max_lines=1, overflow=ft.TextOverflow.ELLIPSIS),
             _text(description, 13, color=theme.TEXT_SECONDARY, max_lines=1, overflow=ft.TextOverflow.ELLIPSIS),
             _text(detail, 12, max_lines=1, overflow=ft.TextOverflow.ELLIPSIS),
         ], spacing=4, expand=True)
@@ -911,7 +918,7 @@ class ModpacksPage(ft.Container):
             _text("This pack archive requires an official CurseForge download.", 14, color=theme.TEXT_SECONDARY),
             launcher_button("Download " + file["filename"], lambda e: open_link(file.get("manual_url", ""))),
             _text("Select the downloaded ZIP to verify it and review the pack installation.", 13),
-        ], spacing=16), title=_text("Download pack archive", 22, pixel=True, color=theme.ACCENT),
+        ], spacing=16), title=_text("Download pack archive", 22, emphasis=True, color=theme.ACCENT),
             actions=[launcher_button("Cancel", self._close_review), launcher_button("Select downloaded ZIP", select, primary=True)],
             on_cancel=self._close_review, width=600, height=350)
 

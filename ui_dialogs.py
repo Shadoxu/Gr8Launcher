@@ -52,8 +52,9 @@ class ProfileDialogHost(ft.Container):
         self._preferred_width = width
         self._preferred_height = height
         self._panel = ft.Container(
-            bgcolor=theme.BACKGROUND,
-            border_radius=8,
+            bgcolor=theme.SURFACE,
+            border=ft.Border.all(1, theme.BORDER),
+            border_radius=14,
             padding=24,
             opacity=0,
             scale=0.98,
@@ -90,7 +91,7 @@ class ProfileDialogHost(ft.Container):
             # Clip the filter to the body so the title bar stays sharp.
             clip_behavior=ft.ClipBehavior.HARD_EDGE,
             blur=ft.Blur(6, 6),
-            bgcolor=ft.Colors.with_opacity(0.28, theme.BLACK),
+            bgcolor=theme.opacity(0.28, theme.BLACK),
             opacity=0,
             animate_opacity=ft.Animation(self.ANIMATION_MS, ft.AnimationCurve.EASE_OUT_CUBIC),
         )
@@ -119,12 +120,15 @@ class ProfileDialogHost(ft.Container):
         self.page.update()
         self.page.run_task(self._play_open, self._generation)
 
-    def close(self):
-        if self._panel is None or self._closing:
+    def close(self, *, animate: bool = True):
+        if self._panel is None or (self._closing and animate):
             return
         self._generation += 1
         self._closing = True
         self._on_cancel = None
+        if not animate:
+            self._finish_close(update=False)
+            return
         # Keep background controls blocked until the fading panel is removed.
         self._panel.ignore_interactions = True
         self._panel.opacity = 0
@@ -149,10 +153,10 @@ class ProfileDialogHost(ft.Container):
             return
         self._finish_close()
 
-    def _finish_close(self):
+    def _finish_close(self, *, update: bool = True):
         # Background refreshes may have mounted new controls while open.
         # Give them explicit disabled flags before restoring their own state.
-        if self._disable_body():
+        if self._disable_body() and update:
             self.page.update()
         for control, was_disabled in self._disabled_states.values():
             control.disabled = was_disabled
@@ -163,7 +167,8 @@ class ProfileDialogHost(ft.Container):
         self._panel = None
         self._closing = False
         self._on_cancel = None
-        self.page.update()
+        if update:
+            self.page.update()
 
     def _dismiss(self, e):
         if self._on_cancel is not None and not self._closing:
