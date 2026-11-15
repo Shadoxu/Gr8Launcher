@@ -1,0 +1,37 @@
+# Wisc Launcher
+
+> Free, open-source Minecraft Java Edition launcher built with Python and Flet. Windows x64 packages; Python source supports Linux and macOS.
+
+Source: https://github.com/wisc-launcher/wisc
+
+## Website
+
+- [Wisc Launcher](__SITE_URL__/): Free, open-source Minecraft Java Edition launcher.
+- [Ready when you are.](__SITE_URL__/download): Get Wisc Launcher for Windows x64, or run the Python source on your own system.
+- [Your first world awaits.](__SITE_URL__/getting-started): Install the launcher, choose a profile, and make sure Java matches your Minecraft version.
+- [One window. Your Minecraft.](__SITE_URL__/minecraft-launcher): Wisc brings Minecraft Java versions, profiles, mods, skins, and launch settings together.
+- [Your mods, in order.](__SITE_URL__/mods): Discover compatible mods, install local JARs, and manage each profile’s collection.
+- [A whole new setup.](__SITE_URL__/modpacks): Browse Modrinth and CurseForge packs, or import a pack archive into a separate instance.
+- [Your skin. Your style.](__SITE_URL__/cosmetics): Import a skin PNG, preview its model, and manage your Ely.by appearance inside the launcher.
+- [Meet in the same world.](__SITE_URL__/multiplayer): Connect from Minecraft’s Multiplayer screen using a compatible profile and the server’s account requirements.
+- [A little guidance. A lot of play.](__SITE_URL__/docs): Everything you need to install Wisc, manage profiles, and understand your launcher data.
+- [Get back to your world.](__SITE_URL__/troubleshooting): Work through the common causes of launch, download, mod, and skin problems.
+- [A hand when you need one.](__SITE_URL__/help): Start with a guide, run through a launch check, or report a reproducible issue.
+- [Let’s check your launch.](__SITE_URL__/doctor): A guided checklist based on your answers. Your browser cannot inspect your Java installation or local game files.
+- [Measure your own setup.](__SITE_URL__/benchmarks): Compare your own runs under consistent conditions. This project does not publish verified FPS or launch-speed claims.
+- [Wisc Bench](__SITE_URL__/wisc-bench/): A local notebook for your measured launch times, FPS, and memory.
+- [Small launcher. Clear purpose.](__SITE_URL__/about): Wisc is a free, open-source Minecraft Java Edition launcher built with Python and Flet.
+- [Your data, explained.](__SITE_URL__/privacy): How this website, the desktop launcher, and linked services handle information.
+- [A small storage footprint.](__SITE_URL__/cookies): This website does not set application cookies. The benchmark notebook can save your entered runs locally.
+- [A few clear terms.](__SITE_URL__/terms): Use Wisc with respect for Minecraft’s license, provider rules, and the project’s open-source license.
+- [Free to download.](__SITE_URL__/refunds): Wisc Launcher has no paid downloads, subscriptions, or purchases on this website.
+- [Open source, with credit.](__SITE_URL__/licenses): The launcher’s source and bundled third-party components retain their own license terms.
+- [Every path, in one place.](__SITE_URL__/files): Browse the website’s product pages, guides, tools, and policy documents.
+
+## Important facts
+
+- Account options are offline usernames and Ely.by; Microsoft authentication is not currently offered.
+- Packaged binaries may retain the Gr8Launcher name.
+- Game launch requires compatible Java.
+- Wisc Bench records user-entered measurements; it does not establish launcher performance claims.
+- Wisc is independent of Mojang and Microsoft.
