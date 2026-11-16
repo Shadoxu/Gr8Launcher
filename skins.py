@@ -25,7 +25,7 @@ from pathlib import Path
 from PIL import Image, ImageChops, ImageDraw, ImageEnhance
 import requests
 
-from storage import get_data_dir, load_settings, save_settings
+from storage import get_active_account, get_data_dir, load_settings, save_settings
 
 ASSETS_DIR = Path(__file__).resolve().parent / ".assets"
 DEFAULT_STEVE_PATH = ASSETS_DIR / "skins" / "default_steve.png"
@@ -615,61 +615,6 @@ class SkinRenderer:
         return buf.getvalue()
 
 
-def render_3d_skin(
-    skin: Image.Image,
-    yaw_deg: float = -25.0,
-    pitch_deg: float = 10.0,
-    model: str = "classic",
-    pose: str = "hero",
-    width: int = 240,
-    height: int = 340,
-    scale: float = 8.5,
-) -> Image.Image:
-    """Render a still preview; interactive viewers should reuse SkinRenderer."""
-    return SkinRenderer(skin, model, pose).render(
-        yaw_deg, pitch_deg, width=width, height=height, scale=scale
-    )
-
-
-def render_3d_skin_bytes(
-    skin_input: Path | str | bytes | Image.Image,
-    yaw_deg: float = -25.0,
-    pitch_deg: float = 10.0,
-    model: str = "classic",
-    pose: str = "hero",
-    width: int = 240,
-    height: int = 340,
-    scale: float = 8.5,
-) -> bytes:
-    """Renders a 3D character preview and returns the PNG encoded bytes."""
-    img = None
-    if isinstance(skin_input, Image.Image):
-        img = skin_input
-    elif isinstance(skin_input, (str, Path)):
-        path = Path(skin_input)
-        if path.is_file():
-            img = Image.open(path)
-    elif isinstance(skin_input, (bytes, bytearray)):
-        img = Image.open(io.BytesIO(skin_input))
-
-    if img is None:
-        img = get_default_skin(model)
-
-    rendered = render_3d_skin(
-        img,
-        yaw_deg=yaw_deg,
-        pitch_deg=pitch_deg,
-        model=model,
-        pose=pose,
-        width=width,
-        height=height,
-        scale=scale,
-    )
-    buf = io.BytesIO()
-    rendered.save(buf, format="PNG", compress_level=1)
-    return buf.getvalue()
-
-
 def render_head_avatar(skin: Image.Image, scale: int = 8) -> Image.Image:
     """Renders the 8x8 player head with outer hat overlay scaled by `scale`."""
     skin_64 = ensure_64x64(skin)
@@ -701,6 +646,36 @@ def render_head_avatar_bytes(
     buf = io.BytesIO()
     avatar.save(buf, format="PNG")
     return buf.getvalue()
+
+
+def get_account_head_avatar_bytes(account: dict | None = None, *, scale: int = 4) -> bytes:
+    """Render the selected account's face from local skins without network requests."""
+    account = get_active_account() if account is None else account
+    if account.get("type") == "offline":
+        return render_head_avatar_bytes(get_default_skin("classic"), scale=scale)
+
+    choice = load_active_skin_choice()
+    candidates = []
+    if choice.get("skin_type") == "custom" and choice.get("custom_path"):
+        candidates.append(Path(choice["custom_path"]))
+    username = str(account.get("username") or "").strip()
+    if username:
+        candidates.append(get_skins_dir() / f"ely_{username.lower()}.png")
+
+    skin_image = None
+    for candidate in candidates:
+        try:
+            with Image.open(candidate) as image:
+                skin_image = image.copy()
+            break
+        except (OSError, ValueError):
+            continue
+    if skin_image is None:
+        skin_image = get_default_skin(choice.get("model", "classic"))
+    try:
+        return render_head_avatar_bytes(skin_image, scale=scale)
+    except Exception:
+        return render_head_avatar_bytes(get_default_skin("classic"), scale=scale)
 
 
 def fetch_ely_skin(

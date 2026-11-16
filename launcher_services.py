@@ -1,6 +1,5 @@
 """Launcher services shared by the current interface."""
 
-import json
 import queue
 import shutil
 import socket
@@ -184,14 +183,6 @@ def sync_local_installations():
     if changed and not storage.save_installations(installations, handled):
         raise OSError("Could not save imported Minecraft installations.")
 
-    profiles_file = Path(minecraft_directory) / "launcher_profiles.json"
-    try:
-        document = json.loads(profiles_file.read_text(encoding="utf-8"))
-        profiles = document.get("profiles") if isinstance(document, dict) else None
-        if isinstance(profiles, dict):
-            storage.save_cached_launcher_profiles(profiles)
-    except (OSError, ValueError):
-        pass
     return changed
 
 

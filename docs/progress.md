@@ -49,8 +49,8 @@ Existing Minecraft cancellation controls retain their behavior.
 
 ## Using the API
 
-Pass the host to a UI component through its constructor. `main.py` also exposes
-the current host through `state.progress_state["host"]` for shared integrations.
+Pass the host to a UI component through its constructor. The application owns
+one host at `LegacyFeatures.progress` and passes it to each page that needs it.
 Use the context manager so exceptions and cancellation release the operation:
 
 ```python

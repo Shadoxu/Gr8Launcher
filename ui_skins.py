@@ -4,7 +4,6 @@ Skins Management Tab and 3D Model Bridge UI for Gr8 Launcher.
 
 import asyncio
 import io
-import math
 import os
 import webbrowser
 from PIL import Image

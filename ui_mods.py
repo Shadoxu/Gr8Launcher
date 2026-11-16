@@ -13,7 +13,7 @@ import ui_theme as theme
 
 from mod_services import LocalMod, ModManager, ModrinthClient, ModUpdate, UpdateCheck, SUPPORTED_LOADERS, primary_file
 from mod_platform import ModPlatformClient
-from ui_profiles import ProfileList, profile_card_surface, profile_list_surface, profile_row
+from ui_profiles import ProfileList, profile_list_surface, profile_row
 from ui_controls import (SimpleInput, AcrylicSelector, launcher_button, launcher_back_button,
                           launcher_icon_button, rounded_artwork, format_size as _size,
                           format_downloads as _downloads, search_input, card_surface, launcher_asset_icon,
@@ -910,11 +910,6 @@ class ModsPage(ft.Container):
             self.details_page._render_header()
             self.details_page._update()
 
-    def _same_folder(self, profile: dict) -> bool:
-        try:
-            return self._game_directory(profile) == self.manager.game_directory
-        except (OSError, ValueError):
-            return False
 
     def _empty(self, title: str, description: str, action: ft.Control | None = None) -> None:
         self.list_view.set_items([], self._cached_row)
@@ -1099,9 +1094,6 @@ class ModsPage(ft.Container):
             install_button,
         ], spacing=12, vertical_alignment=ft.CrossAxisAlignment.CENTER))
 
-    def _open_mods_folder(self, e) -> None:
-        if self.manager:
-            self._open_folder(self.manager.mods_directory)
 
     def _can_change(self, target_manager: ModManager | None = None) -> bool:
         if self._operation_in_progress or self._is_running():
@@ -1172,8 +1164,6 @@ class ModsPage(ft.Container):
         except Exception as error:
             self._show_notification(str(error), "error", "Could not add mods")
 
-    def _local_details(self, mod: LocalMod) -> None:
-        self.open_details(mod)
 
     def _confirm_remove(self, mod: LocalMod, source_manager: ModManager | None = None) -> None:
         if source_manager is not None and source_manager is not self.manager:

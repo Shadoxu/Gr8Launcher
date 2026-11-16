@@ -83,7 +83,7 @@ def serve_preview(directory: Path, port: int, route: str = "home") -> None:
     if not storage.save_installations(profiles, latest_release_id="1.21.4"):
         raise RuntimeError("Could not create screenshot profiles.")
     if not storage.save_settings({**storage.DEFAULT_SETTINGS, "discord_rpc": False,
-                                  "enable_orbs": False, "enable_head_tracking": False}):
+                                  "enable_orbs": False}):
         raise RuntimeError("Could not create screenshot settings.")
 
     import main as launcher_ui

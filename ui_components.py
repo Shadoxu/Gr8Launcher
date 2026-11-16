@@ -46,7 +46,7 @@ def build_themed_switch(label: str, value: bool, theme: dict = None, on_change=N
     if theme is None:
         import colors
         from state import selected_theme
-        theme = colors.THEMES.get(selected_theme.get("name", "Dark"), colors.DEFAULT_THEME)
+        theme = colors.get_theme(selected_theme.get("name", colors.DEFAULT_THEME))
     return ft.Switch(
         label=label,
         value=value,
@@ -71,7 +71,7 @@ def build_themed_alert_dialog(
     if theme is None:
         import colors
         from state import selected_theme
-        theme = colors.THEMES.get(selected_theme.get("name", "Dark"), colors.DEFAULT_THEME)
+        theme = colors.get_theme(selected_theme.get("name", colors.DEFAULT_THEME))
     def handle_dismiss(e):
         if dialog_blur_overlay:
             dialog_blur_overlay.visible = False

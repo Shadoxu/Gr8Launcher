@@ -140,6 +140,8 @@ Gr8Launcher/
 ├── colors.py              # Original selectable Minecraft themes
 ├── banners.py             # Cached and version-specific banner artwork
 ├── ui_components.py       # Classic top navigation and shared controls
+├── ui_home.py             # Home banner, profile shelf, launch controls, and logs
+├── ui_library.py          # Profile manager and unconfigured version folders
 ├── ui_options.py          # Classic options and accounts
 ├── ui_installations.py    # Profile editor
 ├── ui_skins.py            # Classic skin preview and customization

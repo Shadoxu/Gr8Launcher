@@ -84,7 +84,6 @@ SETTINGS_FILE = DATA_DIR / "settings.json"
 PENDING_INSTALLATIONS_FILE = DATA_DIR / "pending_installations.json"
 ACCOUNT_PICTURES_DIR = get_account_pictures_dir()
 ACCOUNTS_FILE = DATA_DIR / "accounts.json"
-LAUNCHER_PROFILES_CACHE_FILE = DATA_DIR / "launcher_profiles_cache.json"
 THEME_FILE = DATA_DIR / "theme.txt"
 
 DEFAULT_SETTINGS: dict[str, object] = {
@@ -96,7 +95,6 @@ DEFAULT_SETTINGS: dict[str, object] = {
     "launch_action": "Hide launcher",
     "capture_logs": True,
     "enable_orbs": True,
-    "enable_head_tracking": True,
     "enable_custom_skins": True,
     "discord_rpc": True,
     "check_updates_automatically": True,
@@ -126,7 +124,6 @@ def load_settings() -> dict[str, object]:
         "fullscreen",
         "capture_logs",
         "enable_orbs",
-        "enable_head_tracking",
         "enable_custom_skins",
         "discord_rpc",
         "check_updates_automatically",
@@ -429,34 +426,6 @@ def save_pending_installations(version_ids: set[str]) -> bool:
             pass
         return False
     return True
-
-
-def load_cached_launcher_profiles() -> dict[str, object]:
-    """Loads the last saved snapshot of profiles from launcher_profiles.json."""
-    try:
-        data = json.loads(LAUNCHER_PROFILES_CACHE_FILE.read_text(encoding="utf-8"))
-        return data if isinstance(data, dict) else {}
-    except (OSError, UnicodeError, json.JSONDecodeError):
-        return {}
-
-
-def save_cached_launcher_profiles(profiles_data: dict[str, object]) -> bool:
-    """Saves the current snapshot of profiles from launcher_profiles.json to our gr8launcher folder."""
-    temporary_file = LAUNCHER_PROFILES_CACHE_FILE.with_suffix(".tmp")
-    try:
-        LAUNCHER_PROFILES_CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
-        temporary_file.write_text(
-            json.dumps(profiles_data, indent=2),
-            encoding="utf-8",
-        )
-        temporary_file.replace(LAUNCHER_PROFILES_CACHE_FILE)
-        return True
-    except (OSError, TypeError, ValueError):
-        try:
-            temporary_file.unlink(missing_ok=True)
-        except OSError:
-            pass
-        return False
 
 
 # =============================================================================

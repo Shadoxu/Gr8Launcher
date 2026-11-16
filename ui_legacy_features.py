@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from dataclasses import fields, is_dataclass, replace
 from pathlib import Path
 from typing import Callable

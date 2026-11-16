@@ -11,16 +11,14 @@ import flet as ft
 from ui_controls import LegacySelector
 from credential_store import redact_credentials
 import launcher_updates
-from colors import get_theme, get_theme_names, get_pagecolor, DEFAULT_THEME
+from colors import DEFAULT_THEME
 import json
 import threading
 import time
-from colors import DEFAULT_THEME
 from storage import (
     DEFAULT_SETTINGS,
     save_settings,
     save_theme_choice,
-    save_profile_options,
     load_accounts,
     get_active_account,
     set_active_account,
@@ -102,13 +100,8 @@ def build_options_views(
     maximum_memory_mb: int,
     minecraft_directory: str,
     account_picture_preview: ft.Control = None,
-    account_picture_status: ft.Control = None,
-    choose_account_picture = None,
-    clear_account_picture = None,
-    remove_managed_account_picture = None,
     refresh_account_picture = None,
     update_sidebar_username = None,
-    play_button_ref: dict = None,
     refresh_launch_button = None,
     rebuild_page_callback = None,
     set_orbs_enabled = None,
@@ -120,20 +113,7 @@ def build_options_views(
     active_page = state.active_page
     options_background_state = state.options_background_state
     player_name_state = state.player_name_state
-    launch_selection = state.launch_selection
 
-    def on_setting_card_hover(e, container):
-        is_hovered = e.data == "true"
-        container.bgcolor = (
-            theme.get("card_hover", theme["card"])
-            if is_hovered
-            else theme["surface"]
-        )
-        container.border = ft.Border.all(
-            1,
-            color=theme["btn_primary"] if is_hovered else theme["border"],
-        )
-        container.update()
 
     def build_option_card(category):
         return ft.Button(
@@ -746,7 +726,7 @@ def build_options_views(
                         update_sidebar_username()
                     if callable(refresh_account_picture):
                         refresh_account_picture()
-                    if play_button_ref and play_button_ref.get("control") is not None and callable(refresh_launch_button):
+                    if callable(refresh_launch_button):
                         refresh_launch_button()
                     rebuild_settings_page(f"Logged in as {auth_data['username']}! Skins unlocked.")
                     if get_account_storage_status(get_active_account()) == "session":
@@ -918,7 +898,7 @@ def build_options_views(
                     update_sidebar_username()
                 if callable(refresh_account_picture):
                     refresh_account_picture()
-                if play_button_ref and play_button_ref.get("control") is not None and callable(refresh_launch_button):
+                if callable(refresh_launch_button):
                     refresh_launch_button()
 
             close_custom_dialog(edit_dlg)
@@ -1023,7 +1003,7 @@ def build_options_views(
                     update_sidebar_username()
                 if callable(refresh_account_picture):
                     refresh_account_picture()
-                if play_button_ref and play_button_ref.get("control") is not None and callable(refresh_launch_button):
+                if callable(refresh_launch_button):
                     refresh_launch_button()
                 rebuild_settings_page(f"Switched active account to {target_name}.")
             return handler
@@ -1050,7 +1030,7 @@ def build_options_views(
                         update_sidebar_username()
                     if callable(refresh_account_picture):
                         refresh_account_picture()
-                    if play_button_ref and play_button_ref.get("control") is not None and callable(refresh_launch_button):
+                    if callable(refresh_launch_button):
                         refresh_launch_button()
                     rebuild_settings_page(f"Logged out of {target_name}.")
                 threading.Thread(target=do_logout, daemon=True).start()

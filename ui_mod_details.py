@@ -16,14 +16,12 @@ from mod_services import (LocalMod, ModManager, ModrinthClient, jar_base_name, n
 from mod_markdown import normalize_mod_markdown
 from mod_compatibility import version_supports_profile
 from ui_controls import (
-    SimpleInput,
     AcrylicSelector,
     launcher_button,
     launcher_back_button,
     launcher_icon_button,
     rounded_artwork,
     search_input,
-    card_surface,
     launcher_asset_icon,
     launcher_tab,
     select_tab,

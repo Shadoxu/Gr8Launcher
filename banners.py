@@ -28,7 +28,6 @@ short-lived failures are recorded in ``index.json`` to avoid hammering sources.
 from __future__ import annotations
 
 import asyncio
-import base64
 import io
 import json
 import re
@@ -52,7 +51,6 @@ _BANNER_DIR_CACHE: Path | None = None
 _INDEX_LOCK = threading.RLock()
 _STORE_LOCK = threading.RLock()
 _INDEX: dict | None = None
-_KEY_LOCKS: dict[str, asyncio.Lock] = {}
 
 # Failure markers are kept briefly so transient outages recover quickly but we
 # do not re-query every source on every selection change.
@@ -148,18 +146,6 @@ def _migrate_legacy_banners(target_dir: Path) -> None:
         pass
 
 
-BANNER_CACHE_DIR = get_banner_cache_dir()
-
-
-def ensure_cache_dir() -> Path:
-    return get_banner_cache_dir()
-
-
-def get_cached_banner_file(key: str) -> Path:
-    """Returns the default cache path for a key (extension-agnostic lookups live elsewhere)."""
-    return get_banner_cache_dir() / f"{_safe_key(key)}.jpg"
-
-
 def _safe_key(key: str) -> str:
     cleaned = re.sub(r"[^A-Za-z0-9._-]+", "_", (key or "").strip())
     return cleaned or "default"
@@ -233,12 +219,6 @@ def version_key_candidates(ver_str: str) -> list[str]:
     return ordered
 
 
-def normalize_version_key(ver_str: str) -> str:
-    """Returns the most specific resolvable banner key for a version string."""
-    keys = version_key_candidates(ver_str)
-    return keys[0] if keys else DEFAULT_BANNER_KEY
-
-
 def resolve_banner_keys(target: dict | None) -> list[str]:
     if not target:
         return [DEFAULT_BANNER_KEY]
@@ -249,11 +229,6 @@ def resolve_banner_keys(target: dict | None) -> list[str]:
             return version_key_candidates(value)
 
     return [DEFAULT_BANNER_KEY]
-
-
-def resolve_banner_key(target: dict | None) -> str:
-    keys = resolve_banner_keys(target)
-    return keys[0] if keys else DEFAULT_BANNER_KEY
 
 
 def wiki_page_titles_for_key(key: str) -> list[str]:
@@ -749,12 +724,6 @@ def _weak_sources(key: str):
             yield url, label
 
 
-def _candidate_sources(key: str):
-    """Yields (url, source_label) candidates for a key, strong sources first."""
-    yield from _strong_sources(key)
-    yield from _weak_sources(key)
-
-
 WEAK_SOURCE_LABELS = {"wiki-version-page", "wiki-search"}
 
 
@@ -859,17 +828,6 @@ def _is_recent_strong_miss(key: str) -> bool:
     return True
 
 
-def find_cached_banner(key: str) -> Path | None:
-    """Returns a validated cached banner file for a key, if present."""
-    cached = _cached_banner(key)
-    return cached[0] if cached else None
-
-
-def find_cached_banner_tiered(key: str) -> tuple[Path, str] | None:
-    """Returns (path, tier) for a cached banner, where tier is 'strong' or 'weak'."""
-    return _cached_banner(key)
-
-
 def _cached_banner(key: str) -> tuple[Path, str] | None:
     directory = get_banner_cache_dir()
     entry = _index_entry(key)
@@ -904,12 +862,8 @@ def _best_cached(keys, want_tier: str) -> Path | None:
     return None
 
 
-def is_valid_banner_key(key: str) -> bool:
-    return find_cached_banner(key) is not None
-
-
 # ---------------------------------------------------------------------------
-# Custom profile banners & Base64 Icons
+# Custom profile banners
 # ---------------------------------------------------------------------------
 
 def save_custom_banner_image(profile_id: str, source_path: str | Path) -> str | None:
@@ -924,32 +878,6 @@ def save_custom_banner_image(profile_id: str, source_path: str | Path) -> str | 
         safe_id = re.sub(r"[^a-zA-Z0-9_\-]", "_", str(profile_id))
         target_file = get_banner_cache_dir() / f"custom_{safe_id}.{ext}"
         shutil.copyfile(str(src), str(target_file))
-        return str(target_file)
-    except Exception:
-        return None
-
-
-def save_base64_icon_as_banner(profile_id: str, base64_str: str) -> str | None:
-    """Decodes a base64 or data:image/... URI icon and saves it as a profile banner."""
-    if not base64_str or not isinstance(base64_str, str):
-        return None
-    raw_b64 = base64_str.strip()
-    ext = "png"
-    if raw_b64.startswith("data:image/") and ";base64," in raw_b64:
-        header, raw_b64 = raw_b64.split(";base64,", 1)
-        sub_ext = header.replace("data:image/", "").split("+")[0].strip().lower()
-        if sub_ext in _IMAGE_EXTENSIONS:
-            ext = sub_ext
-
-    try:
-        # Fix missing base64 padding if needed
-        padded = raw_b64 + "=" * (-len(raw_b64) % 4)
-        image_bytes = base64.b64decode(padded)
-        if not image_bytes or len(image_bytes) < 8:
-            return None
-        safe_id = re.sub(r"[^a-zA-Z0-9_\-]", "_", str(profile_id))
-        target_file = get_banner_cache_dir() / f"custom_{safe_id}.{ext}"
-        target_file.write_bytes(image_bytes)
         return str(target_file)
     except Exception:
         return None
@@ -1012,12 +940,6 @@ def get_local_banner_for_target(target: dict | None, minecraft_directory: str | 
 # ---------------------------------------------------------------------------
 # Downloading
 # ---------------------------------------------------------------------------
-
-def query_live_wiki_banner(key: str) -> str | None:
-    """Returns the best remote banner URL for a key using the live source chain."""
-    for url, _source in _candidate_sources(key):
-        return url
-    return None
 
 
 def _store_banner(key: str, data: bytes, extension: str, source: str, url: str | None, tier: str) -> Path | None:
@@ -1106,29 +1028,6 @@ def _resolve_for_keys(keys: list[str]) -> str | None:
             if not _cached_banner(key):
                 _record_failure(key)
         return None
-
-
-def _key_lock(key: str) -> asyncio.Lock:
-    lock = _KEY_LOCKS.get(key)
-    if lock is None:
-        lock = asyncio.Lock()
-        _KEY_LOCKS[key] = lock
-    return lock
-
-
-async def ensure_banner_downloaded(key: str) -> str | None:
-    """Ensures a banner for a single key is cached locally, returning its path."""
-    key = (key or DEFAULT_BANNER_KEY).strip() or DEFAULT_BANNER_KEY
-
-    cached = find_cached_banner(key)
-    if cached:
-        return str(cached)
-
-    async with _key_lock(key):
-        cached = find_cached_banner(key)
-        if cached:
-            return str(cached)
-        return await asyncio.to_thread(_resolve_for_keys, [key])
 
 
 async def ensure_banner_for_target(target: dict | None, minecraft_directory: str | None = None) -> str | None:

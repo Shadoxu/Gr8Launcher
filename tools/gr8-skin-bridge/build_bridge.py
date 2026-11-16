@@ -8,7 +8,6 @@ import os
 import shutil
 import struct
 import subprocess
-import sys
 import zipfile
 from pathlib import Path
 
