@@ -16,7 +16,7 @@ from wisc.core.storage import get_active_account, save_profile_options
 from wisc.services.skins import get_account_head_avatar_bytes as get_active_player_head_avatar_bytes
 from wisc.core.credentials import redact_credentials
 from wisc.ui.components import clickable_mouse_cursor, tooltip
-from wisc.ui.controls import launcher_button
+from wisc.ui.controls import launcher_button, launcher_icon_button
 from wisc.ui.glass import glass_panel
 from wisc.ui.profile_assets import profile_icon
 
@@ -124,11 +124,9 @@ def build_home_view(*, page: ft.Page, theme: dict, installations: list[dict],
             spacing=8, tight=True, vertical_alignment=ft.CrossAxisAlignment.CENTER,
         ),
     )
-    welcome_row = ft.Row(
-        [ft.Text("Welcome back. Your next adventure is ready.", size=13,
-                 color=theme["text_secondary"], expand=True, max_lines=1,
-                 overflow=ft.TextOverflow.ELLIPSIS), account_card],
-        height=36, spacing=12, vertical_alignment=ft.CrossAxisAlignment.CENTER,
+    account_row = ft.Row(
+        [account_card], height=36, alignment=ft.MainAxisAlignment.END,
+        vertical_alignment=ft.CrossAxisAlignment.CENTER,
     )
     selected_target = launch_targets.get(launch_selection["key"])
 
@@ -170,13 +168,13 @@ def build_home_view(*, page: ft.Page, theme: dict, installations: list[dict],
             message = ("Downloading Minecraft..." if launcher_log_state.get("downloading")
                        else "Minecraft is running" if launcher_log_state.get("game_started")
                        else "Starting Minecraft...")
-        elif not target:
-            message = "Create a profile to get started."
         else:
-            message = "Installed · Ready to play" if is_target_installed(target) else "Not installed · Downloads when you play"
+            message = ""
         hero_status_text.value = message
+        hero_status_row.visible = bool(message)
         hero_status_icon.color = theme["btn_primary"] if is_target_installed(target) else theme["text_secondary"]
-        footer_status.value = message if launcher_log_state.get("running") or not target else "Ready to play"
+        footer_status.value = message
+        footer_status.visible = bool(message)
 
     update_hero_status(selected_target)
     launcher_log_list = ft.ListView(
@@ -711,10 +709,16 @@ def build_home_view(*, page: ft.Page, theme: dict, installations: list[dict],
         elif target:
             features.edit_latest_profile()
 
-    hero_edit_button = ft.Button("Edit", height=42,
-                                style=launcher_button("Edit", None).style, on_click=edit_current_profile)
-    hero_folder_button = ft.Button("Folder", height=42,
-                                  style=launcher_button("Folder", None).style, on_click=open_current_folder)
+    hero_edit_button = launcher_icon_button(
+        icon=ft.Icons.EDIT_OUTLINED, tooltip="Edit profile", on_click=edit_current_profile,
+    )
+    hero_folder_button = launcher_icon_button(
+        icon=ft.Icons.FOLDER_OPEN_OUTLINED, tooltip="Open profile folder", on_click=open_current_folder,
+    )
+    profile_actions = glass_panel(
+        height=42, border_radius=8, padding=3,
+        content=ft.Row([hero_edit_button, hero_folder_button], spacing=2, tight=True),
+    )
     selected_version_elements = ft.Container(
         width=660,
         content=ft.Column([
@@ -723,7 +727,8 @@ def build_home_view(*, page: ft.Page, theme: dict, installations: list[dict],
             selected_version_name,
             ft.Row([selected_version_summary], spacing=10),
             hero_status_row,
-            ft.Row([play_button, hero_edit_button, hero_folder_button], spacing=8, wrap=True),
+            ft.Row([play_button, profile_actions], spacing=8, wrap=True,
+                   vertical_alignment=ft.CrossAxisAlignment.CENTER),
         ], spacing=12, alignment=ft.MainAxisAlignment.CENTER,
             horizontal_alignment=ft.CrossAxisAlignment.STRETCH),
     )
@@ -739,9 +744,10 @@ def build_home_view(*, page: ft.Page, theme: dict, installations: list[dict],
     )
     bottom_log_toggle_button.height = 28
     home_status_row = ft.Row([footer_status, bottom_log_toggle_button], height=28,
+                             alignment=ft.MainAxisAlignment.END,
                              vertical_alignment=ft.CrossAxisAlignment.CENTER)
     body_column = ft.Column(
-        [welcome_row, selected_installation_card, library_shelf_container, home_status_row],
+        [account_row, selected_installation_card, library_shelf_container, home_status_row],
         expand=True, spacing=14, horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
     )
     geometry = {"slots": 3, "card_height": 130, "text_width": 660, "scroll": False,
@@ -779,7 +785,7 @@ def build_home_view(*, page: ft.Page, theme: dict, installations: list[dict],
                         scroll=scroll, title_size=title_size, compact=compact)
 
     refresh_launch_button()
-    reveal_controls = [welcome_row, selected_installation_card, library_shelf_container, home_status_row]
+    reveal_controls = [account_row, selected_installation_card, library_shelf_container, home_status_row]
     for control in reveal_controls:
         prepare_intro(control)
     home_view = _HomeView(
