@@ -100,6 +100,7 @@ DEFAULT_SETTINGS: dict[str, object] = {
     "discord_rpc": True,
     "check_updates_automatically": True,
     "download_updates_automatically": False,
+    "onboarding_completed": False,
 }
 
 
@@ -113,6 +114,9 @@ def load_settings() -> dict[str, object]:
         return DEFAULT_SETTINGS.copy()
 
     settings = DEFAULT_SETTINGS.copy()
+    # Existing settings predate onboarding; keep established launchers on Home.
+    if "onboarding_completed" not in saved:
+        settings["onboarding_completed"] = True
     for key in ("ram_mb", "window_width", "window_height"):
         value = saved.get(key)
         if isinstance(value, int) and not isinstance(value, bool) and value > 0:
@@ -129,6 +133,7 @@ def load_settings() -> dict[str, object]:
         "discord_rpc",
         "check_updates_automatically",
         "download_updates_automatically",
+        "onboarding_completed",
     ):
         value = saved.get(key)
         if isinstance(value, bool):

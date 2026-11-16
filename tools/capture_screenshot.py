@@ -89,7 +89,7 @@ def serve_preview(directory: Path, port: int, route: str = "home") -> None:
     if not storage.save_installations(profiles, latest_release_id="1.21.4"):
         raise RuntimeError("Could not create screenshot profiles.")
     if not storage.save_settings({**storage.DEFAULT_SETTINGS, "discord_rpc": False,
-                                  "enable_orbs": False}):
+                                  "enable_orbs": False, "onboarding_completed": True}):
         raise RuntimeError("Could not create screenshot settings.")
 
     from wisc import app as launcher_ui
@@ -235,6 +235,7 @@ def capture(output: Path, browser: Path, *, route: str = "home") -> None:
                             return document.body?.innerText || '';
                         })()""") or ""
                         expected = {
+                            "onboarding": ("WELCOME", "to Wisc.", "Continue"),
                             "home": ("Survival", "Fabric Adventure", "PLAY"),
                             "installations": ("Survival", "Fabric Adventure", "New Profile"),
                             "mods": ("Mods", "Installed", "Discover"),
@@ -294,7 +295,7 @@ def main() -> None:
     parser.add_argument("--checksum-file", type=Path, help="Add the PNG to an existing SHA256SUMS.txt")
     parser.add_argument("--serve", type=Path, help=argparse.SUPPRESS)
     parser.add_argument("--port", type=int, help=argparse.SUPPRESS)
-    parser.add_argument("--route", default="home", choices=("home", "installations", "mods", "skins", "options",
+    parser.add_argument("--route", default="home", choices=("home", "onboarding", "installations", "mods", "skins", "options",
                         "options_updates", "options_accounts", "options_about", "new_installation", "account_login"),
                         help="Launcher page to capture using isolated sample data")
     parser.add_argument("--width", type=int, default=1100)

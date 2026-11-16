@@ -28,6 +28,7 @@ from wisc.ui.glass import glass_palette
 from wisc.ui.features import LegacyFeatures, load_ui_installations as load_installations
 from wisc.ui.library import build_library_view
 from wisc.ui.home import build_home_view
+from wisc.ui.onboarding import OnboardingView
 from wisc.ui.window import build_window_resize_handles
 from wisc.ui.shell import (
     GLASS_COLOR, GLASS_MUTED, GLASS_TEXT, HOME_BACKDROP_OPACITY,
@@ -857,7 +858,9 @@ def main(page: ft.Page):
                 return
 
             page_content.content = content
-            if name in tab_names:
+            if name == "onboarding":
+                tab = "home"
+            elif name in tab_names:
                 tab = name
             elif name.startswith("options") or name == "account_login":
                 tab = "options"
@@ -879,7 +882,7 @@ def main(page: ft.Page):
             if page_content.content is None:
                 page_content.content = content
                 current_page = name
-                tab = name if name in tab_names else "options" if name.startswith("options") or name == "account_login" else "installations"
+                tab = "home" if name == "onboarding" else name if name in tab_names else "options" if name.startswith("options") or name == "account_login" else "installations"
                 tabs_buttons.selected_index = tab_names.index(tab)
                 page.update()
                 if name == "mods":
@@ -978,6 +981,25 @@ def main(page: ft.Page):
                 close_dialog_with_blur=close_dialog_with_blur,
             )[name]
 
+        def finish_onboarding(theme_name: str, destination: str) -> bool:
+            if features.busy and (theme_name != theme_select or destination == "new_installation"):
+                notify("Wait for the current operation to finish.", "warning")
+                return False
+            if not save_theme_choice(theme_name):
+                notify("Could not save your palette. Please try again.", "error")
+                return False
+            current_settings = load_settings()
+            current_settings["onboarding_completed"] = True
+            if not save_settings(current_settings):
+                save_theme_choice(theme_select)
+                notify("Could not save setup. Please try again.", "error")
+                return False
+            settings.update(current_settings)
+            selected_theme["name"] = theme_name
+            page.controls.clear()
+            build_page(theme_name, destination)
+            return True
+
         def navigate(name, profile_id=None, force=False):
             nonlocal handled_external_profile_ids
             if name == "profiles":
@@ -1017,7 +1039,13 @@ def main(page: ft.Page):
 
             active_page.update(name=name, profile_id=profile_id)
             features.enter(name, profile_id, defer_load=name == "mods")
-            if name == "mods":
+            if name == "onboarding":
+                sync_background()
+                content = OnboardingView(
+                    page=page, theme_name=theme_select, assets_dir=ASSETS_DIR,
+                    artwork_source=background.artwork.source, on_complete=finish_onboarding,
+                )
+            elif name == "mods":
                 content = features.mods
             elif name.startswith("options"):
                 content = build_options_page(name)
@@ -1079,7 +1107,7 @@ def main(page: ft.Page):
             else:
                 return
             sync_background()
-            page_backdrop.set_frosted(name != "home")
+            page_backdrop.set_frosted(name not in ("home", "onboarding"))
             show_page(name, content)
 
         navigation_state["navigate"] = navigate
@@ -1357,7 +1385,7 @@ def main(page: ft.Page):
             except Exception as error:
                 notify(error, 'error', 'Could not sync profiles')
 
-    build_page(theme_choice)
+    build_page(theme_choice, "home" if settings.get("onboarding_completed") else "onboarding")
     page.run_task(refresh_version_catalog)
     page.run_task(monitor_connectivity)
     page.run_task(watch_external_profiles)

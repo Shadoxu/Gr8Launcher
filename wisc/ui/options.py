@@ -8,7 +8,7 @@ import random
 import sys
 import subprocess
 import flet as ft
-from wisc.ui.controls import LegacySelector, SimpleInput
+from wisc.ui.controls import LegacySelector, SimpleInput, launcher_button
 from wisc.ui.glass import glass_panel
 from wisc.services import updates as launcher_updates
 from wisc.core.themes import DEFAULT_THEME
@@ -199,6 +199,8 @@ def build_options_views(
                                 for category in options_categories[3:]
                             ],
                         ),
+                        launcher_button("Replay welcome tour", lambda e: navigate("onboarding"),
+                                        icon=ft.Icons.AUTO_AWESOME_OUTLINED, height=36),
                         ft.Container(
                             margin=ft.Margin.only(top=16),
                             padding=ft.Padding.symmetric(horizontal=32),

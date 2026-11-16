@@ -7,7 +7,7 @@ tasks. All application imports use the `wisc` package.
 
 | Area | Modules |
 | --- | --- |
-| Home and library | `ui/home.py`, `ui/library.py`, `ui/profiles.py` |
+| Home, onboarding, and library | `ui/home.py`, `ui/onboarding.py`, `ui/library.py`, `ui/profiles.py` |
 | Accounts and profile editing | `ui/accounts.py`, `ui/installations.py`, `ui/profile_assets.py` |
 | Options and skins | `ui/options.py`, `ui/skins.py`, `ui/skin_viewer.py` |
 | Mods and modpacks | `ui/mods.py`, `ui/modpacks.py`, `ui/mod_details.py`, `ui/mod_install.py`, `ui/mod_list.py` |
