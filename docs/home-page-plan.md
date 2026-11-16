@@ -1,6 +1,6 @@
 # Home page redesign plan
 
-Status: implemented in `gr8launcher/ui/home.py`. The [clickable concept](home-page-concept.html) remains an illustrative design reference.
+Status: implemented in `wisc/ui/home.py`, with the shared artwork and glass shell in `wisc/ui/shell.py`.
 
 ## Reference and direction
 
@@ -13,7 +13,7 @@ Source references:
 - [recents_row.rs](https://github.com/Polyfrost/OneLauncher/blob/dd085b25853750a38dfff757cb6a2caa281d6784/packages/oneclient_app/src/components/recents_row.rs)
 - [dynamic_art.rs](https://github.com/Polyfrost/OneLauncher/blob/dd085b25853750a38dfff757cb6a2caa281d6784/packages/oneclient_app/src/components/dynamic_art.rs)
 
-Adapt the hierarchy and artwork treatment to Gr8 Launcher. Use our bundled artwork, Mojangles branding, selected theme, existing top navigation, and rounded banner/library cards. Keep the current account, launch, profile, and log behavior connected to their existing services.
+Adapt the hierarchy and artwork treatment to Wisc. Use our bundled artwork, Wisc logo, Pixelify Sans branding, selected theme, existing top navigation, and rounded library cards. Keep the current account, launch, profile, and log behavior connected to their existing services.
 
 ## Layout
 
@@ -52,7 +52,7 @@ Selecting a shelf card changes the hero and launch target together. Load cached 
 
 ## Implementation and performance
 
-- `gr8launcher/ui/home.py` keeps the existing account, launch, cancellation, and floating-log callbacks. `gr8launcher/app.py` uses the shared `StaggeredReveal` for Home navigation.
+- `wisc/ui/home.py` keeps the existing account, launch, cancellation, and floating-log callbacks. `wisc/app.py` uses the shared `StaggeredReveal` for Home navigation.
 - Build only the first three or four shelf cards, keeping their saved order. Reuse those controls when resizing, and retain all other profiles through Manage all.
 - Check local artwork once per displayed profile and selected profile. Show bundled fallback artwork immediately when the cache is empty.
 - Start one artwork worker after the page mounts. Prioritize the selected profile, resolve each missing profile's artwork at most once per Home visit, and skip network requests while offline.

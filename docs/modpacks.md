@@ -70,7 +70,7 @@ any missing Minecraft and exact loader files.
 
 ## Pack versions and customization
 
-The instance's `gr8launcher/modpack.json` records its source, pack version, game
+The instance's `wisc/modpack.json` records its source, pack version, game
 and loader pins, and owned files with SHA-512 checksums. The original manifest is
 saved alongside it. Known CurseForge mod identities are also available to the
 existing Mods manager.

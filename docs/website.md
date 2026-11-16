@@ -69,8 +69,8 @@ unless its robots metadata contains `noindex`.
 ## Downloads and public API
 
 `GET /api/release` returns the latest stable GitHub release tag and any Windows
-x64 installer, portable ZIP, and checksum assets. Published assets can retain
-the `Gr8Launcher` name. The fixed upstream is `wisc-launcher/wisc`; API clients
+x64 installer, portable ZIP, and checksum assets. New packages use the Wisc name;
+older releases can retain their original filenames. The fixed upstream is `wisc-launcher/wisc`; API clients
 cannot supply an alternate upstream. Successful metadata is cached on Vercel.
 Upstream failures return 503 and retain a GitHub release-page fallback in the
 website. GET and HEAD are accepted; other methods return 405.

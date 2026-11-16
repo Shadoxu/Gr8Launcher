@@ -56,7 +56,7 @@ Use the context manager so exceptions and cancellation release the operation:
 ```python
 import asyncio
 
-from gr8launcher.ui.progress import track_progress
+from wisc.ui.progress import track_progress
 
 async def refresh_skin(progress_host):
     with track_progress(progress_host, "Refreshing skin...", priority=50):

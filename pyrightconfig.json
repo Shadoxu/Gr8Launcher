@@ -2,7 +2,7 @@
     "typeCheckingMode": "off",
     "include": [
         "main.py",
-        "gr8launcher",
+        "wisc",
         "tools"
     ],
     "exclude": [

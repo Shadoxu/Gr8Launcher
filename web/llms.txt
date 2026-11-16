@@ -29,7 +29,7 @@ Source: https://github.com/wisc-launcher/wisc
 
 ## Current project details
 
-- Current release packages are Windows x64; their published filenames retain Gr8Launcher.
+- Current release packages are Windows x64; new packages use the Wisc name.
 - Source requires Python 3.10+ and game launch requires compatible Java.
 - Current account options are offline usernames and Ely.by.
 - Ely.by sign-in unlocks skin customization in the launcher.

@@ -1,9 +1,9 @@
 # Code map
 
 Run `python main.py` from the repository root. The entry point runs the Windows
-updater guard before importing the UI, then calls `gr8launcher.app.run()`.
-`gr8launcher/app.py` owns navigation, page wiring, launch actions, and background
-tasks. All application imports use the `gr8launcher` package.
+updater guard before importing the UI, then calls `wisc.app.run()`.
+`wisc/app.py` owns navigation, page wiring, launch actions, and background
+tasks. All application imports use the `wisc` package.
 
 | Area | Modules |
 | --- | --- |
@@ -11,23 +11,29 @@ tasks. All application imports use the `gr8launcher` package.
 | Accounts and profile editing | `ui/accounts.py`, `ui/installations.py`, `ui/profile_assets.py` |
 | Options and skins | `ui/options.py`, `ui/skins.py`, `ui/skin_viewer.py` |
 | Mods and modpacks | `ui/mods.py`, `ui/modpacks.py`, `ui/mod_details.py`, `ui/mod_install.py`, `ui/mod_list.py` |
-| Shared UI | `ui/components.py`, `ui/controls.py`, `ui/dialogs.py`, `ui/theme.py`, `ui/scroll_views.py`, `ui/motion.py` |
+| Shared UI and window artwork | `ui/shell.py`, `ui/components.py`, `ui/controls.py`, `ui/dialogs.py`, `ui/theme.py`, `ui/scroll_views.py`, `ui/motion.py` |
 | Feature lifecycle and feedback | `ui/features.py`, `ui/progress.py`, `ui/toasts.py`, `ui/updates.py` |
 | Minecraft install and launch | `services/launcher.py` |
 | Local discovery, connectivity, game logs, and profile operations | `services/instances.py`, `services/profiles.py` |
-| Accounts, skins, artwork, and Discord | `services/auth.py`, `services/skins.py`, `services/banners.py`, `services/discord_presence.py` |
+| Accounts, skins, artwork, and Discord | `services/auth.py`, `services/skins.py`, `services/artwork.py`, `services/banners.py`, `services/discord_presence.py` |
 | Launcher update discovery and handoff | `services/updates.py`, `tools/updater/Program.cs` |
 | Mod management and providers | `mods/manager.py`, `mods/platform.py`, `mods/curseforge.py` |
 | Compatibility, descriptions, and modpacks | `mods/compatibility.py`, `mods/markdown.py`, `mods/modpacks.py` |
 | Settings, profiles, and secrets | `core/storage.py`, `core/credentials.py` |
 | Shared runtime state and palettes | `core/state.py`, `core/themes.py` |
 
-Python paths in the table are relative to `gr8launcher/`; `tools/` paths start at
+Python paths in the table are relative to `wisc/`; `tools/` paths start at
 the repository root. Keep Flet controls in `ui/`
 and application wiring in `app.py`; core, mod, and service code works without
 initializing a UI. Package initializers do not import their child modules.
 Some launch/profile/modpack operations use local imports to avoid circular
 dependencies; preserve that initialization order when moving code.
+
+`ui/shell.py` retains the selected artwork outside the navigation host and
+shares its pre-blurred cover with the fixed glass chrome. `services/artwork.py`
+maps Minecraft versions to bundled `.assets/version-art/` covers without
+network requests, preserving custom profile artwork. Home's artwork worker
+updates library thumbnails only; it never owns the window background.
 
 ## Files and resources
 
@@ -37,10 +43,14 @@ instead of deriving repository paths from a moved module's `__file__` or the
 current working directory. `application_root()` resolves the executable's
 directory in packaged runs and the repository root in source runs.
 
-Keep runtime data in Minecraft's `gr8launcher/` directory. Legacy `.data`
-migration still starts at the resource root, and credentials continue to use
-native credential storage. Fonts, artwork, and licenses stay in `.assets/`;
-the Java skin bridge stays in `tools/gr8-skin-bridge/`.
+Use `core.paths.launcher_data_dir()` for runtime data. New installations use
+Minecraft's `wisc/`; existing `gr8launcher/` folders remain in place to preserve
+absolute artwork paths, modpack journals, and credential scopes. Legacy `.data`
+migration still starts at the resource root. Native credential stores read old
+service aliases and migrate only after a verified native save. Existing aliases
+stay synchronized for rollback; sign-out clears both names. Fonts, artwork,
+and licenses stay in `.assets/`; branding uses `.assets/fonts/PixelifySans.ttf`;
+the Java skin bridge stays in `tools/wisc-skin-bridge/`.
 
 `tools/build_windows.py` packages the `main.py` entry point and follows its
 package imports. `tools/capture_screenshot.py` copies the application package
@@ -57,8 +67,10 @@ in a clone. Choose tests for the affected area; for example:
 
 ```powershell
 python -B -m unittest temp.test_legacy_ui temp.test_ui_theme
+python -B -m unittest temp.test_launcher_artwork temp.test_home_layout
 python -B -m unittest temp.test_mod_services temp.test_modpack_services
 python -B -m unittest temp.test_launcher_updates temp.test_release_plan temp.test_release_tag
+python -B temp/run_wisc_checks.py temp.test_wisc_rename temp.test_wisc_branding
 ```
 
 Use `temp/<task>/` for temporary captures and experiments, then remove those

@@ -45,7 +45,7 @@ def copy_preview_source(source: Path) -> None:
     """Copy release inputs without local tests, backups, or runtime caches."""
     source.mkdir()
     shutil.copy2(PROJECT_ROOT / "main.py", source / "main.py")
-    shutil.copytree(PROJECT_ROOT / "gr8launcher", source / "gr8launcher",
+    shutil.copytree(PROJECT_ROOT / "wisc", source / "wisc",
                     ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
     # The About view resolves the version beside the copied application source.
     if (PROJECT_ROOT / "VERSION").is_file():
@@ -64,7 +64,7 @@ def serve_preview(directory: Path, port: int, route: str = "home") -> None:
     minecraft_root = directory / "minecraft"
     minecraft_launcher_lib.utils.get_minecraft_directory = lambda: str(minecraft_root)
 
-    from gr8launcher.core import storage
+    from wisc.core import storage
     assert storage.DATA_DIR.resolve().is_relative_to(directory.resolve())
     if not storage.save_accounts({
         "active_account_id": "screenshot-player",
@@ -92,7 +92,7 @@ def serve_preview(directory: Path, port: int, route: str = "home") -> None:
                                   "enable_orbs": False}):
         raise RuntimeError("Could not create screenshot settings.")
 
-    from gr8launcher import app as launcher_ui
+    from wisc import app as launcher_ui
     import flet as ft
     import uvicorn
     # Use the same bundled assets as the desktop app, with web-relative paths.
@@ -102,9 +102,9 @@ def serve_preview(directory: Path, port: int, route: str = "home") -> None:
     launcher_ui.get_version_catalog = lambda: (
         [{"id": "1.21.4", "type": "release"}, {"id": "1.21.1", "type": "release"}], "1.21.4", True)
     launcher_ui.check_internet_connection = lambda *args, **kwargs: True
-    from gr8launcher.services import instances as launcher_services
+    from wisc.services import instances as launcher_services
     launcher_services.check_internet_connection = lambda *args, **kwargs: True
-    from gr8launcher.services import banners
+    from wisc.services import banners
     banners.get_local_banner_for_target = lambda target, *args: str(Path("banners") / (
         "portal.png" if str((target or {}).get("loader", "Vanilla")).casefold() != "vanilla" else "farmhouse.png"))
 
@@ -121,7 +121,7 @@ def serve_preview(directory: Path, port: int, route: str = "home") -> None:
             # Wait for the launcher's entrance animations before checking paint.
             await asyncio.sleep(2)
             if route != "home":
-                from gr8launcher.core import state
+                from wisc.core import state
                 state.navigation_state["navigate"](route)
                 await asyncio.sleep(1)
             (directory / "ready").write_text("ready", encoding="utf-8")
@@ -242,7 +242,7 @@ def capture(output: Path, browser: Path, *, route: str = "home") -> None:
                             "options": ("Java", "Accounts", "Updates"),
                             "options_updates": ("Launcher Updates", "Check for Updates"),
                             "options_accounts": ("Manage Accounts", "Player"),
-                            "options_about": ("About", "Gr8 Launcher"),
+                            "options_about": ("About", "Wisc"),
                             "new_installation": ("New Profile", "Save Profile"),
                             "account_login": ("Add Account", "Your next adventure", "Log In"),
                         }[route]
@@ -289,7 +289,7 @@ def capture(output: Path, browser: Path, *, route: str = "home") -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output", type=Path, default=PROJECT_ROOT / "dist/gr8-launcher-home.png")
+    parser.add_argument("--output", type=Path, default=PROJECT_ROOT / "dist/wisc-home.png")
     parser.add_argument("--browser", help="Edge or Chrome executable (auto-detected by default)")
     parser.add_argument("--checksum-file", type=Path, help="Add the PNG to an existing SHA256SUMS.txt")
     parser.add_argument("--serve", type=Path, help=argparse.SUPPRESS)

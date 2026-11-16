@@ -75,7 +75,7 @@ The custom title bar and top navigation stay visible. The content has the classi
   key. The native credential vault stores it separately from account sessions;
   if that vault is unavailable, the key lasts only for this launcher session.
   It is never written to profile/settings files. Deployments can supply
-  `GR8_CURSEFORGE_API_KEY` instead. API keys are sent only to the CurseForge API,
+  `WISC_CURSEFORGE_API_KEY` instead. API keys are sent only to the CurseForge API,
   with API redirects disabled. The launcher does not use Prism's bundled key.
 - CurseForge files without an API download URL require a manual download, as
   in Prism. The review links to each exact official file and asks for the
@@ -85,7 +85,7 @@ The custom title bar and top navigation stay visible. The content has the classi
   place. Wrong or changed files fail verification. Additional required files
   discovered during planning must also be selected. Restricted CDN URLs are
   never synthesized or bypassed.
-- `SimpleInput` and `SimpleButton` live in `gr8launcher/ui/controls.py` and are imported by
+- `SimpleInput` and `SimpleButton` live in `wisc/ui/controls.py` and are imported by
   the launcher and Mods. Selectors and buttons, profile surfaces, list controls,
   brief `StaggeredReveal` transitions, dialog host, and toast host are reused.
   Normal searching retains matching row objects. Back from a mod page restores
@@ -168,7 +168,7 @@ The custom title bar and top navigation stay visible. The content has the classi
   description fills the available width beside the 236 px metadata panel, with
   a consistent 24 px gap as the window resizes. Metadata and external links share
   a compact frosted panel; both the description and panel scroll independently.
-- `gr8launcher/mods/markdown.py` converts embedded HTML to native Markdown before rendering.
+- `wisc/mods/markdown.py` converts embedded HTML to native Markdown before rendering.
   It preserves links, images, nested lists, tables, warnings, FAQ contents, and
   code examples. HTML presentation attributes are omitted; embedded media is
   offered as a link. Existing Markdown stays intact, including fenced/indented
@@ -223,7 +223,7 @@ The custom title bar and top navigation stay visible. The content has the classi
   changes an installed file.
   Mod details also expose an Update action when their
   loaded version history contains a newer matching version.
-- Update checks are saved in the instance's `gr8launcher/mod-updates.json`, including
+- Update checks are saved in the instance's `wisc/mod-updates.json`, including
   checks that found no updates. Navigation and launcher restarts restore the
   matching result without another online check, and the last checked release
   filter is restored when reopening an instance. Saved results are scoped to
@@ -316,20 +316,20 @@ The custom title bar and top navigation stay visible. The content has the classi
   Disabled suffixes are recognized regardless of capitalization. Minecraft
   applies these changes on its next launch.
 - Remove requires confirmation and moves the JAR to the selected game folder's
-  `gr8launcher/mod-trash/<token>/`. Each removal notification's Undo action
+  `wisc/mod-trash/<token>/`. Each removal notification's Undo action
   restores that exact JAR, including its enabled state, even if the selected
   profile changes to Vanilla or a global profile. The original instance folder
   must still exist. Dismissed/expired removals remain in trash for manual recovery.
   Existing files are never replaced by Undo, and actions still respect the
   running-game lock.
-- The managed-mod index lives in `gr8launcher/mods.json` alongside the selected
+- The managed-mod index lives in `wisc/mods.json` alongside the selected
   game folder. Downloads, imports, toggles, and removals are blocked while
   Minecraft is starting or running. Vanilla and missing-instance profiles show
   instructions for selecting or creating a usable modded profile.
 - JARs copied directly into the instance's mods folder appear on refresh. Local
   metadata remains available offline. Background checksum lookups identify
   provider-hosted files, including renamed JARs, and store a bounded optional
-  `gr8launcher/mod-identities.json` cache. Cached identities survive restart and
+  `wisc/mod-identities.json` cache. Cached identities survive restart and
   are reused only when the actual checksum matches; replacing a JAR externally
   invalidates its former identity. A corrupt identity cache does not block local
   file actions. Unknown files retain their local metadata, enable/disable, and
