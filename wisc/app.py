@@ -28,7 +28,10 @@ from wisc.ui.glass import glass_palette
 from wisc.ui.features import LegacyFeatures, load_ui_installations as load_installations
 from wisc.ui.library import build_library_view
 from wisc.ui.home import build_home_view
-from wisc.ui.shell import GLASS_COLOR, GLASS_MUTED, GLASS_TEXT, TITLE_BAR_HEIGHT, LauncherBackground
+from wisc.ui.shell import (
+    GLASS_COLOR, GLASS_MUTED, GLASS_TEXT, HOME_BACKDROP_OPACITY,
+    TITLE_BAR_HEIGHT, LauncherBackground,
+)
 from wisc.core.credentials import redact_credentials
 from wisc.core.paths import ASSETS_DIR
 from wisc.services.instances import check_internet_connection, read_game_output
@@ -829,7 +832,7 @@ def main(page: ft.Page):
         )
 
         page_backdrop = background.panel(
-            ft.Container(), radius=0, opacity=0.14, frosted=False,
+            ft.Container(), radius=0, opacity=HOME_BACKDROP_OPACITY, frosted=False,
         )
         content_area = ft.Container(
             content=ft.Stack([page_content], fit=ft.StackFit.EXPAND,

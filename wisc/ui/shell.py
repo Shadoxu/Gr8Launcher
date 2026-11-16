@@ -11,6 +11,9 @@ from wisc.ui.glass import GLASS_COLOR, GLASS_TEXT, GLASS_MUTED, GLASS_RADIUS, gl
 
 
 TITLE_BAR_HEIGHT = 52
+HOME_BACKDROP_OPACITY = 0.04
+FEATURE_BACKDROP_OPACITY = 0.24
+CUSTOM_ARTWORK_BLUR = 10
 
 
 def _artwork_vignette(**kwargs) -> ft.Container:
@@ -23,7 +26,7 @@ def _artwork_vignette(**kwargs) -> ft.Container:
                 gradient=ft.LinearGradient(
                     begin=ft.Alignment.CENTER_LEFT, end=ft.Alignment.CENTER_RIGHT,
                     colors=[ft.Colors.with_opacity(alpha, GLASS_COLOR)
-                            for alpha in (0.62, 0.10, 0.0, 0.10, 0.62)],
+                            for alpha in (0.42, 0.04, 0.0, 0.04, 0.42)],
                     stops=[0, 0.18, 0.5, 0.82, 1],
                 ),
             ),
@@ -32,7 +35,7 @@ def _artwork_vignette(**kwargs) -> ft.Container:
                 gradient=ft.LinearGradient(
                     begin=ft.Alignment.TOP_CENTER, end=ft.Alignment.BOTTOM_CENTER,
                     colors=[ft.Colors.with_opacity(alpha, GLASS_COLOR)
-                            for alpha in (0.56, 0.08, 0.0, 0.16, 0.70)],
+                            for alpha in (0.36, 0.02, 0.0, 0.08, 0.48)],
                     stops=[0, 0.22, 0.48, 0.75, 1],
                 ),
             ),
@@ -59,7 +62,7 @@ class GlassSurface(ft.Container):
         self.artwork_image = ft.Image(
             src=artwork.frosted_source or artwork.source,
             left=-left, top=-top, width=viewport_width, height=viewport_height,
-            fit=ft.BoxFit.COVER, gapless_playback=True, filter_quality=ft.FilterQuality.LOW,
+            fit=ft.BoxFit.COVER, gapless_playback=True, filter_quality=ft.FilterQuality.HIGH,
             visible=frosted and artwork.frosted_source is not None,
         )
         self.vignette = _artwork_vignette(
@@ -93,7 +96,7 @@ class GlassSurface(ft.Container):
         self.artwork_image.visible = self._frosted and self._artwork.frosted_source is not None
         self.vignette.visible = self.artwork_image.visible
         self.background_layer.blur = (
-            ft.Blur(10, 10, ft.BlurTileMode.MIRROR)
+            ft.Blur(CUSTOM_ARTWORK_BLUR, CUSTOM_ARTWORK_BLUR, ft.BlurTileMode.MIRROR)
             if self._frosted and self._artwork.frosted_source is None else None
         )
 
@@ -110,7 +113,9 @@ class GlassSurface(ft.Container):
         if self._frosted == frosted:
             return
         self._frosted = frosted
-        self.tint.bgcolor = ft.Colors.with_opacity(0.48 if frosted else 0.14, GLASS_COLOR)
+        self.tint.bgcolor = ft.Colors.with_opacity(
+            FEATURE_BACKDROP_OPACITY if frosted else HOME_BACKDROP_OPACITY, GLASS_COLOR,
+        )
         self._sync_filter()
         if self._mounted:
             self.background_layer.update()
