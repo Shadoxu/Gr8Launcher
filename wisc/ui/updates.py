@@ -19,6 +19,7 @@ from wisc.ui.controls import (
     launcher_pill,
 )
 from wisc.ui.scroll_views import ScrollColumn
+from wisc.ui.glass import glass_panel
 
 
 def open_url(url: str) -> None:
@@ -152,7 +153,7 @@ class UpdateController:
         )
 
         # Primary Status Card
-        self.status_card = ft.Container(
+        self.status_card = glass_panel(
             bgcolor=theme.SURFACE,
             border_radius=12,
             border=ft.Border.all(1, theme.BORDER),
@@ -286,7 +287,7 @@ class UpdateController:
         can_apply = self.service.can_apply() or self.service.mock
 
         # Sleek version comparison card
-        version_card = ft.Container(
+        version_card = glass_panel(
             bgcolor=theme.SURFACE,
             border_radius=5,
             padding=ft.Padding.symmetric(horizontal=16, vertical=12),
@@ -444,7 +445,7 @@ class UpdateController:
             ),
         )
 
-        header_container = ft.Container(
+        header_container = glass_panel(
             bgcolor=theme.SURFACE,
             border_radius=5,
             padding=ft.Padding.symmetric(horizontal=14, vertical=10),

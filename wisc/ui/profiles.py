@@ -6,6 +6,7 @@ from dataclasses import fields
 
 import flet as ft
 from wisc.ui import theme
+from wisc.ui.glass import glass_panel
 from flet.controls.base_control import BaseControl
 
 from wisc.ui.scroll_views import SCROLL_FADE_START, bottom_scroll_padding
@@ -512,7 +513,7 @@ class ProfileList(ft.Container):
 
 
 def profile_card_surface(content, *, glow_color, selected=False, horizontal_padding=14):
-    """Use the classic rounded surface for resting and dragged cards.
+    """Use the same rounded glass surface for resting and dragged cards.
 
     Keep the selection layer and padded body stable while dragging, so canceling
     restores the card without rebuilding its contents or losing focus.
@@ -552,7 +553,7 @@ def profile_card_surface(content, *, glow_color, selected=False, horizontal_padd
         ),
         ft.Container(padding=padding, content=content),
     ])
-    return ft.Container(
+    return glass_panel(
         border_radius=12,
         foreground_decoration=ft.BoxDecoration(
             border_radius=12,

@@ -12,6 +12,7 @@ import flet as ft
 from wisc.ui.controls import LegacySelector, SimpleInput, launcher_back_button, launcher_button
 from wisc.ui.profile_assets import ProfileIconField, PROFILE_ICON_OPTIONS, profile_icon
 from wisc.ui.scroll_views import ScrollColumn
+from wisc.ui.glass import glass_panel
 from wisc.services.launcher import get_mod_loader, minecraft_directory, get_profile_version_id
 from wisc.core.storage import save_installations
 from wisc.services import banners
@@ -780,7 +781,7 @@ def build_installation_editor(
         "Save Profile", on_click=save_profile, height=40,
         style=launcher_button("Save Profile", None, primary=True).style,
     )
-    editor_card = ft.Container(
+    editor_card = glass_panel(
         expand=6,
         padding=20,
         bgcolor=theme["surface"],
@@ -800,7 +801,7 @@ def build_installation_editor(
             ],
         ),
     )
-    appearance_card = ft.Container(
+    appearance_card = glass_panel(
         expand=5,
         padding=20,
         bgcolor=theme["surface"],

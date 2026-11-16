@@ -17,7 +17,7 @@ from wisc.services.skins import get_account_head_avatar_bytes as get_active_play
 from wisc.core.credentials import redact_credentials
 from wisc.ui.components import clickable_mouse_cursor, tooltip
 from wisc.ui.controls import launcher_button
-from wisc.ui.shell import glass_panel
+from wisc.ui.glass import glass_panel
 
 if TYPE_CHECKING:
     from wisc.ui.features import LegacyFeatures
@@ -113,10 +113,15 @@ def build_home_view(*, page: ft.Page, theme: dict, installations: list[dict],
     launcher_log_state["refresh_account_picture"] = refresh_account_picture
     account_card = launcher_button("Account", lambda e: navigate("options_accounts"),
                                    height=36, tooltip=tooltip("Go to account settings"))
-    account_card.content = ft.Row(
-        [account_avatar, account_username_text,
-         ft.Icon(ft.Icons.EXPAND_MORE, size=16, color=theme["text_secondary"])],
-        spacing=8, tight=True, vertical_alignment=ft.CrossAxisAlignment.CENTER,
+    account_card.style.padding = 0
+    account_card.content = glass_panel(
+        height=36, border_radius=8, bgcolor=ft.Colors.TRANSPARENT,
+        padding=ft.Padding.symmetric(horizontal=14),
+        content=ft.Row(
+            [account_avatar, account_username_text,
+             ft.Icon(ft.Icons.EXPAND_MORE, size=16, color=theme["text_secondary"])],
+            spacing=8, tight=True, vertical_alignment=ft.CrossAxisAlignment.CENTER,
+        ),
     )
     welcome_row = ft.Row(
         [ft.Text("Welcome back. Your next adventure is ready.", size=13,
@@ -144,13 +149,6 @@ def build_home_view(*, page: ft.Page, theme: dict, installations: list[dict],
     selected_version_summary = ft.Text(
         version_summary(selected_target), size=13, color=theme["text_secondary"],
         max_lines=1, overflow=ft.TextOverflow.ELLIPSIS, expand=True,
-    )
-    selected_version_instance_badge = ft.Container(
-        content=ft.Text("Separate instance", size=11, color=theme["text_primary"]),
-        padding=ft.Padding.symmetric(horizontal=8, vertical=3), border_radius=5,
-        border=ft.Border.all(1, ft.Colors.with_opacity(0.4, theme["btn_primary"])),
-        bgcolor=ft.Colors.with_opacity(0.14, theme["btn_primary"]),
-        visible=bool(selected_target and selected_target.get("is_instance")),
     )
 
     def is_target_installed(target: dict | None) -> bool:
@@ -246,13 +244,13 @@ def build_home_view(*, page: ft.Page, theme: dict, installations: list[dict],
     )
     launcher_log_state["bottom_log_toggle_button"] = bottom_log_toggle_button
 
-    floating_logs_window = ft.Container(
+    floating_logs_window = glass_panel(
         left=28,
         right=28,
         top=20,
         bottom=64,
-        bgcolor=ft.Colors.with_opacity(0.96, theme["card"]),
-        border=ft.Border.all(1, ft.Colors.with_opacity(0.35, theme["border"])),
+        bgcolor=theme["toast"],
+        border=ft.Border.all(1, theme["border"]),
         border_radius=16,
         shadow=ft.BoxShadow(
             blur_radius=28,
@@ -299,7 +297,7 @@ def build_home_view(*, page: ft.Page, theme: dict, installations: list[dict],
                 ft.Container(
                     expand=True,
                     bgcolor=ft.Colors.with_opacity(0.45, theme["surface"]),
-                    border=ft.Border.all(1, ft.Colors.with_opacity(0.14, theme["border"])),
+                    border=ft.Border.all(1, theme["border"]),
                     border_radius=10,
                     padding=10,
                     content=launcher_log_list,
@@ -479,7 +477,6 @@ def build_home_view(*, page: ft.Page, theme: dict, installations: list[dict],
         selected_version_name.value = target["name"]
         selected_version_name.tooltip = tooltip(target["name"])
         selected_version_summary.value = version_summary(target)
-        selected_version_instance_badge.visible = bool(target.get("is_instance"))
         on_target_selected(target)
         for card_key in (old_key, key):
             if card_key in library_cards:
@@ -525,12 +522,13 @@ def build_home_view(*, page: ft.Page, theme: dict, installations: list[dict],
                             left=0, top=0, right=0, bottom=0,
                             gradient=ft.LinearGradient(
                                 begin=ft.Alignment.TOP_CENTER, end=ft.Alignment.BOTTOM_CENTER,
-                                colors=[ft.Colors.TRANSPARENT, ft.Colors.with_opacity(0.95, theme["surface"])],
+                                colors=[ft.Colors.TRANSPARENT, ft.Colors.with_opacity(0.32, theme["surface"])],
                                 stops=[0.2, 1],
                             ),
                         ),
-                        ft.Container(
-                            left=12, right=12, bottom=12,
+                        glass_panel(
+                            left=0, right=0, bottom=0, padding=12,
+                            bgcolor=theme["card"], border_radius=0,
                             content=ft.Column([
                                 ft.Text(target["name"], size=14, weight=ft.FontWeight.W_600,
                                         color=theme["text_primary"], max_lines=1,
@@ -552,11 +550,15 @@ def build_home_view(*, page: ft.Page, theme: dict, installations: list[dict],
         "New Profile", lambda e: navigate("new_installation"), width=116, height=130,
         disabled=bool(launcher_log_state.get("running")),
     )
-    new_profile_card.content = ft.Column([
-        ft.Icon(ft.Icons.ADD, size=26, color=theme["text_secondary"]),
-        ft.Text("New Profile", size=12, color=theme["text_secondary"]),
-    ], spacing=10, alignment=ft.MainAxisAlignment.CENTER,
-        horizontal_alignment=ft.CrossAxisAlignment.CENTER)
+    new_profile_card.style.padding = 0
+    new_profile_card.content = glass_panel(
+        border_radius=8, bgcolor=ft.Colors.TRANSPARENT, width=116,
+        content=ft.Column([
+            ft.Icon(ft.Icons.ADD, size=26, color=theme["text_secondary"]),
+            ft.Text("New Profile", size=12, color=theme["text_secondary"]),
+        ], spacing=10, alignment=ft.MainAxisAlignment.CENTER,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+    )
     library_cards_flow = ft.Row(spacing=12, vertical_alignment=ft.CrossAxisAlignment.STRETCH)
     library_shelf_container = ft.Column([
         ft.Row([
@@ -703,7 +705,7 @@ def build_home_view(*, page: ft.Page, theme: dict, installations: list[dict],
             ft.Text("MINECRAFT JAVA EDITION", font_family="Pixelify Sans", size=14,
                     color=theme["text_secondary"]),
             selected_version_name,
-            ft.Row([selected_version_summary, selected_version_instance_badge], spacing=10),
+            ft.Row([selected_version_summary], spacing=10),
             hero_status_row,
             ft.Row([play_button, hero_edit_button, hero_folder_button], spacing=8, wrap=True),
         ], spacing=12, alignment=ft.MainAxisAlignment.CENTER,
@@ -715,7 +717,7 @@ def build_home_view(*, page: ft.Page, theme: dict, installations: list[dict],
         alignment=ft.Alignment.CENTER_LEFT, content=selected_version_elements,
     )
     selected_version_elements.content.spacing = 8
-    selected_installation_card = glass_panel(
+    selected_installation_card = ft.Container(
         key=ft.ValueKey("home-hero"), expand=True,
         content=ft.Stack([hero_details], expand=True),
     )

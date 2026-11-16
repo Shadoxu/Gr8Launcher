@@ -30,6 +30,7 @@ from wisc.ui.motion import StaggeredReveal
 from wisc.ui.profiles import ProfileList, profile_card_surface, profile_list_surface, scroll_fade_shader
 from wisc.ui.progress import ProgressHost, ProgressTask, track_progress
 from wisc.ui.scroll_views import ScrollColumn
+from wisc.ui.glass import glass_panel
 
 BODY_FONT = "Segoe UI"
 SIDEBAR_WIDTH = 236
@@ -422,7 +423,7 @@ class ModDetailsPage(ft.Container):
         if links:
             sidebar.extend([text("Links", 14, emphasis=True, color=theme.TEXT),
                             ft.Column(links, spacing=2, horizontal_alignment=ft.CrossAxisAlignment.STRETCH)])
-        panel = ft.Container(padding=16, bgcolor=theme.SURFACE, border_radius=12,
+        panel = glass_panel(padding=16, bgcolor=theme.SURFACE, border_radius=12,
                              border=ft.Border.all(1, theme.BORDER),
                              content=ft.Column(sidebar, spacing=12, horizontal_alignment=ft.CrossAxisAlignment.STRETCH))
         return ft.Row([main, ft.Container(width=SIDEBAR_WIDTH, visible=bool(facts or links),
@@ -555,7 +556,7 @@ class ModDetailsPage(ft.Container):
     def _gallery(self) -> ft.Column:
         controls = []
         for item in self.project.get("gallery", []):
-            controls.append(ft.Container(
+            controls.append(glass_panel(
                 padding=12, border_radius=12, bgcolor=theme.SURFACE, border=ft.Border.all(1, theme.BORDER),
                 content=ft.Column([
                     ft.Image(src=item.get("url", ""), fit=ft.BoxFit.CONTAIN, height=280),

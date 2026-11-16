@@ -1,10 +1,11 @@
-"""Semantic colors shared by the classic shell and retained launcher features."""
+"""Semantic glass colors and theme accents shared by all launcher features."""
 
 from __future__ import annotations
 
 import flet as ft
 
 from wisc.core.themes import DEFAULT_THEME, get_theme
+from wisc.ui.glass import glass_palette
 
 
 class ThemeColor(str):
@@ -59,7 +60,8 @@ MASK_TRANSPARENT = "#00ffffff"
 
 
 def apply_legacy_theme(palette: dict[str, str]) -> None:
-    """Apply the same classic tokens to every retained feature control."""
+    """Apply consistent dark glass and the selected accents to every feature."""
+    palette = glass_palette(palette)
     roles = {
         "BACKGROUND": "bg", "SURFACE": "surface", "SURFACE_STRONG": "card",
         "CARD_HOVER": "card_hover", "GLOW": "card_hover", "BORDER": "border",
@@ -68,7 +70,8 @@ def apply_legacy_theme(palette: dict[str, str]) -> None:
         "SECONDARY": "btn_secondary", "SECONDARY_HOVER": "btn_secondary_hover",
         "SECONDARY_ACTIVE": "btn_secondary_active", "ON_SECONDARY": "btn_secondary_text",
         "TEXT": "text_primary", "MUTED": "text_secondary", "NAV_MUTED": "text_muted",
-        "TOAST_BACKGROUND": "card", "CODE_BACKGROUND": "surface", "QUOTE_BACKGROUND": "card",
+        "TOAST_BACKGROUND": "toast", "DIALOG_BACKGROUND": "dialog",
+        "CODE_BACKGROUND": "surface", "QUOTE_BACKGROUND": "card",
         "AUTH_INACTIVE": "surface", "SWITCH_TRACK": "border",
         "SWITCH_INACTIVE_TRACK": "surface", "SWITCH_ACTIVE_TRACK": "btn_primary",
         "ICON_MUTED": "text_secondary", "ICON_CLOSE": "text_secondary",

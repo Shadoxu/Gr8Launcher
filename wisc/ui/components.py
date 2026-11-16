@@ -5,6 +5,7 @@ Reusable UI components and widget helpers for Wisc.
 import asyncio
 import random
 import flet as ft
+from wisc.ui.glass import GLASS_TEXT, glass_palette
 
 clickable_mouse_cursor = {
     ft.ControlState.DISABLED: ft.MouseCursor.BASIC,
@@ -30,8 +31,9 @@ def tooltip(msg: str, theme: dict = None) -> ft.Tooltip:
         except Exception:
             theme = None
 
-    card_bg = theme.get("card", "#1F1B17") if isinstance(theme, dict) else "#1F1B17"
-    text_color = theme.get("text_primary", ft.Colors.WHITE) if isinstance(theme, dict) else ft.Colors.WHITE
+    theme = glass_palette(theme or {})
+    card_bg = theme["toast"]
+    text_color = GLASS_TEXT
 
     return ft.Tooltip(
         message=msg,
@@ -47,6 +49,7 @@ def build_themed_switch(label: str, value: bool, theme: dict = None, on_change=N
         from wisc.core import themes as colors
         from wisc.core.state import selected_theme
         theme = colors.get_theme(selected_theme.get("name", colors.DEFAULT_THEME))
+    theme = glass_palette(theme)
     return ft.Switch(
         label=label,
         value=value,
@@ -72,6 +75,7 @@ def build_themed_alert_dialog(
         from wisc.core import themes as colors
         from wisc.core.state import selected_theme
         theme = colors.get_theme(selected_theme.get("name", colors.DEFAULT_THEME))
+    theme = glass_palette(theme)
     def handle_dismiss(e):
         if dialog_blur_overlay:
             dialog_blur_overlay.visible = False
@@ -84,7 +88,7 @@ def build_themed_alert_dialog(
 
     return ft.AlertDialog(
         modal=modal,
-        bgcolor=theme["surface"],
+        bgcolor=theme["dialog"],
         shape=ft.RoundedRectangleBorder(radius=12),
         title=ft.Text(
             title,

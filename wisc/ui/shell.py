@@ -7,23 +7,10 @@ from pathlib import Path
 import flet as ft
 
 from wisc.services.artwork import BackgroundArtwork, resolve_background_artwork
+from wisc.ui.glass import GLASS_COLOR, GLASS_TEXT, GLASS_MUTED, GLASS_RADIUS, glass_panel
 
 
-GLASS_COLOR = "#0B0D0A"
-GLASS_TEXT = "#F1F5EC"
-GLASS_MUTED = "#B1BAAD"
-GLASS_RADIUS = 14
 TITLE_BAR_HEIGHT = 52
-
-
-def glass_panel(*, opacity: float = 0.42, blur: float | None = 10, **kwargs) -> ft.Container:
-    """Frost a fixed panel's backdrop while leaving its labels and controls sharp."""
-    return ft.Container(
-        bgcolor=ft.Colors.with_opacity(opacity, GLASS_COLOR),
-        blur=ft.Blur(blur, blur, ft.BlurTileMode.MIRROR) if blur is not None else None,
-        border_radius=GLASS_RADIUS,
-        **kwargs,
-    )
 
 
 def _artwork_vignette(**kwargs) -> ft.Container:

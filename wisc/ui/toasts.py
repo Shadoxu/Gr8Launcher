@@ -9,6 +9,7 @@ from typing import Callable
 import flet as ft
 from wisc.ui import theme
 from wisc.ui.controls import launcher_button
+from wisc.ui.glass import glass_panel
 
 
 @dataclass
@@ -141,7 +142,7 @@ class ToastHost(ft.Container):
             ),
         )
         action_button = launcher_button(action_label, None, height=30) if action_label and on_action else None
-        glass = ft.Container(
+        glass = glass_panel(
             border_radius=12,
             border=ft.Border.all(1, theme.BORDER),
             clip_behavior=ft.ClipBehavior.ANTI_ALIAS,

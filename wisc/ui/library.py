@@ -16,6 +16,7 @@ from wisc.services.launcher import get_profile_version_id
 from wisc.ui.controls import launcher_button, launcher_icon_button
 from wisc.ui.profile_assets import profile_badges, profile_icon, profile_summary
 from wisc.ui.profiles import ProfileList, profile_drag_region, profile_list_surface, profile_row
+from wisc.ui.glass import glass_panel
 
 if TYPE_CHECKING:
     from wisc.ui.features import LegacyFeatures
@@ -97,7 +98,7 @@ class ClassicLibraryPage(ft.Container):
             ))
         extras = list(footer)
         if not cards:
-            extras.insert(0, ft.Container(
+            extras.insert(0, glass_panel(
                 padding=24, bgcolor=theme.SURFACE, border_radius=12, border=ft.Border.all(1, theme.BORDER),
                 content=ft.Text("No profiles yet. Create a profile to get started.", size=13, color=theme.MUTED),
             ))
@@ -405,7 +406,7 @@ def build_library_view(*, page: ft.Page, app_theme: dict, features: LegacyFeatur
                     size=11,
                     color=theme["text_muted"],
                 ),
-                ft.Container(
+                glass_panel(
                     bgcolor=theme["surface"],
                     border=ft.Border.all(
                         1,
@@ -455,7 +456,7 @@ def build_library_view(*, page: ft.Page, app_theme: dict, features: LegacyFeatur
             )
             page.update()
 
-        danger_zone_header = ft.Container(
+        danger_zone_header = glass_panel(
             bgcolor=theme["surface"],
             border=ft.Border.all(
                 1,

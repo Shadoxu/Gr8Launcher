@@ -5,6 +5,7 @@ from dataclasses import fields
 
 import flet as ft
 from wisc.ui import theme
+from wisc.ui.glass import glass_panel
 
 from wisc.ui.scroll_views import ScrollColumn
 
@@ -51,8 +52,8 @@ class ProfileDialogHost(ft.Container):
         self._on_cancel = on_cancel
         self._preferred_width = width
         self._preferred_height = height
-        self._panel = ft.Container(
-            bgcolor=theme.SURFACE,
+        self._panel = glass_panel(
+            bgcolor=theme.DIALOG_BACKGROUND,
             border=ft.Border.all(1, theme.BORDER),
             border_radius=14,
             padding=24,

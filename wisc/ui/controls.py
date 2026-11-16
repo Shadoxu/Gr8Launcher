@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Callable
 import flet as ft
 from wisc.ui import theme
+from wisc.ui.glass import glass_panel
 
 
 def format_size(size: int) -> str:
@@ -108,8 +109,9 @@ def launcher_pill(label: str, on_click: Callable | None, *, icon=None, primary: 
     if icon is not None:
         controls.append(ft.Icon(icon, size=14, color=fg))
     controls.append(ft.Text(label, color=fg, size=13, weight=ft.FontWeight.W_600))
-    return ft.Container(
+    return glass_panel(
         bgcolor=bg,
+        blur=None if primary else 10,
         border_radius=8, height=36,
         border=ft.Border.all(0 if primary else 1, theme.BORDER),
         padding=ft.Padding.symmetric(horizontal=12),
@@ -230,7 +232,7 @@ class AcrylicSelector(ft.PopupMenuButton):
             row_controls.append(ft.Text(prefix, size=16 if pixel else 13, font_family="Pixelify Sans" if pixel else None, color=theme.MUTED))
         row_controls.extend([self._label, ft.Icon(ft.Icons.EXPAND_MORE_SHARP, color=theme.MUTED, size=18)])
         super().__init__(
-            content=ft.Container(
+            content=glass_panel(
                 height=48, bgcolor=theme.SURFACE, border_radius=5,
                 border=ft.Border.all(1, theme.BORDER),
                 clip_behavior=ft.ClipBehavior.ANTI_ALIAS,

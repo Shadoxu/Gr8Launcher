@@ -6,6 +6,7 @@ from typing import Callable
 
 import flet as ft
 from wisc.ui import theme
+from wisc.ui.glass import glass_panel
 
 from wisc.mods.manager import InstallPlan, ModUpdate, primary_file
 from wisc.ui.controls import (
@@ -46,7 +47,7 @@ class ModInstallReview(ft.Column):
                 _text("Review your updates" if updates else "Review your installation", 12),
             ], spacing=2, expand=True),
         ], spacing=14)
-        self.destination = ft.Container(
+        self.destination = glass_panel(
             bgcolor=theme.SURFACE_STRONG, border_radius=8, padding=12,
             border=ft.Border.all(1, theme.BORDER),
             content=ft.Row([
@@ -95,7 +96,7 @@ class ModInstallReview(ft.Column):
         ]
         if self.updates:
             targets = {version["project_id"]: version for version in plan.root_versions}
-            self.controls.append(ft.Container(
+            self.controls.append(glass_panel(
                 bgcolor=theme.SURFACE, border_radius=5, padding=12,
                 content=ft.Column([
                     ft.Column([
@@ -140,7 +141,7 @@ class ModInstallReview(ft.Column):
                 ], spacing=8))
             self.controls.extend([
                 ft.Text("Dependencies", size=15, color=theme.TEXT, weight=ft.FontWeight.W_600),
-                ft.Container(ft.Column(rows, spacing=10), bgcolor=theme.SURFACE, border_radius=5, padding=10),
+                glass_panel(ft.Column(rows, spacing=10), bgcolor=theme.SURFACE, border_radius=5, padding=10),
             ])
         elif not self.updates:
             self.controls.append(_text("No dependencies listed for this version.", 13))

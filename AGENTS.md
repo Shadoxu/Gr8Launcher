@@ -34,10 +34,10 @@ Run from the repository root in a virtual environment. Source supports Python 3.
 
 Follow `design_theme.txt` and the restored classic components:
 
-- **Palette:** selectable Minecraft themes in `wisc/core/themes.py`, defaulting to Earth 2. Shared chrome uses the fixed dark glass palette; retained feature pages use the selected theme's surface, text, and button tokens through `wisc.ui.theme.apply_legacy_theme`.
+- **Palette:** selectable Minecraft themes in `wisc/core/themes.py`, defaulting to Earth 2, supply action, selection, and focus accents. Chrome and page elements use the fixed dark translucent palette in `wisc/ui/glass.py`, including retained features through `wisc.ui.theme.apply_legacy_theme`.
 - **Typography/assets:** use the supplied Wisc logo and bundled Pixelify Sans for branding and pixel text. Keep existing Minecraft artwork and all bundled font licenses, including the legacy notices in `.assets/font/`. Use system fonts for dense details.
-- **Shape:** preserve rounded library cards, compact profile rows, and options cards. Common glass surfaces have rounded corners and no borders; the fixed title bar spans the full width. Keep selection and focus feedback visible.
-- **Dropdowns:** use `AcrylicSelector`, or the `LegacySelector` adapter for classic forms. Menus stay anchored to the field width, with 48px closed fields, 5px corners, and theme-colored labels/chevrons. Use one control per filter.
+- **Shape:** preserve rounded library cards, compact profile rows, and options cards. Page cards and shared surfaces use frosted glass with rounded corners and no resting outlines; the fixed title bar spans the full width. Keep selection and focus feedback visible, and keep Home's launch panel transparent.
+- **Dropdowns:** use `AcrylicSelector`, or the `LegacySelector` adapter for classic forms. Menus stay anchored to the field width, with 48px closed fields, 5px corners, light labels and chevrons, and theme accents for selected items. Use one control per filter.
 - **Layout:** retain the original top navigation, custom window controls, Home launch panel, and library shelf. Keep selected version artwork across every page and do not restore a separate Home banner. Keep Mods & Modpacks and Options > Updates accessible. Check 1100x650 and larger windows; keep content scrollable and window controls usable.
 - **Motion/feedback:** keep the classic tab transitions and reuse `StaggeredReveal`, `ProfileDialogHost`, `ProfileList`, `ProgressHost`, and `ToastHost` for retained features. Keep transitions interruptible, restore state after navigation/canceled drags, and provide concise loading/error feedback.
 

@@ -11,7 +11,7 @@ tasks. All application imports use the `wisc` package.
 | Accounts and profile editing | `ui/accounts.py`, `ui/installations.py`, `ui/profile_assets.py` |
 | Options and skins | `ui/options.py`, `ui/skins.py`, `ui/skin_viewer.py` |
 | Mods and modpacks | `ui/mods.py`, `ui/modpacks.py`, `ui/mod_details.py`, `ui/mod_install.py`, `ui/mod_list.py` |
-| Shared UI and window artwork | `ui/shell.py`, `ui/components.py`, `ui/controls.py`, `ui/dialogs.py`, `ui/theme.py`, `ui/scroll_views.py`, `ui/motion.py` |
+| Shared UI and window artwork | `ui/glass.py`, `ui/shell.py`, `ui/components.py`, `ui/controls.py`, `ui/dialogs.py`, `ui/theme.py`, `ui/scroll_views.py`, `ui/motion.py` |
 | Feature lifecycle and feedback | `ui/features.py`, `ui/progress.py`, `ui/toasts.py`, `ui/updates.py` |
 | Minecraft install and launch | `services/launcher.py` |
 | Local discovery, connectivity, game logs, and profile operations | `services/instances.py`, `services/profiles.py` |
@@ -30,7 +30,13 @@ Some launch/profile/modpack operations use local imports to avoid circular
 dependencies; preserve that initialization order when moving code.
 
 `ui/shell.py` retains the selected artwork outside the navigation host and
-shares its pre-blurred cover with the fixed glass chrome. `services/artwork.py`
+shares its pre-blurred cover with the fixed glass chrome and the full-window
+feature-page backdrop. Page content and dialogs stay in their existing host.
+`ui/glass.py` defines the dark translucent surface palette and rounded backdrop
+filters for page cards, selectors, and feedback. Inputs and secondary actions
+use matching translucent fills. `ui/theme.py` applies these surfaces to retained
+features while keeping the selected theme's accents.
+`services/artwork.py`
 maps Minecraft versions to bundled `.assets/version-art/` covers without
 network requests, preserving custom profile artwork. Home's artwork worker
 updates library thumbnails only; it never owns the window background.

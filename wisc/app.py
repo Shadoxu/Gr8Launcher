@@ -24,6 +24,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 import flet as ft
 from wisc.ui.controls import LegacySelector
 from wisc.ui import theme as ui_theme
+from wisc.ui.glass import glass_palette
 from wisc.ui.features import LegacyFeatures, load_ui_installations as load_installations
 from wisc.ui.library import build_library_view
 from wisc.ui.home import build_home_view
@@ -88,7 +89,7 @@ def main(page: ft.Page):
     online_available = False
     handled_external_profile_ids = load_handled_external_profile_ids()
     theme_choice = load_theme_choice(available_themes)
-    theme = get_theme(theme_choice)
+    theme = glass_palette(get_theme(theme_choice))
     ui_theme.apply_legacy_theme(theme)
     selected_theme = state.selected_theme
     selected_theme["name"] = theme_choice
@@ -659,7 +660,7 @@ def main(page: ft.Page):
     )
 
     def build_page(theme_select, tab="home"):
-        theme = get_theme(theme_select)
+        theme = glass_palette(get_theme(theme_select))
         background.reset_surfaces()
         if features.library:
             features.library.leave()
@@ -827,8 +828,12 @@ def main(page: ft.Page):
             animate_opacity=ft.Animation(160, ft.AnimationCurve.EASE_IN),
         )
 
-        content_area = background.panel(
-            page_content, left=10, top=TITLE_BAR_HEIGHT, opacity=0.14, frosted=False,
+        page_backdrop = background.panel(
+            ft.Container(), radius=0, opacity=0.14, frosted=False,
+        )
+        content_area = ft.Container(
+            content=ft.Stack([page_content], fit=ft.StackFit.EXPAND,
+                             clip_behavior=ft.ClipBehavior.NONE),
             expand=True,
             margin=ft.Margin.only(left=10, top=0, right=10, bottom=10),
         )
@@ -1070,7 +1075,7 @@ def main(page: ft.Page):
             else:
                 return
             sync_background()
-            content_area.set_frosted(name != "home")
+            page_backdrop.set_frosted(name != "home")
             show_page(name, content)
 
         navigation_state["navigate"] = navigate
@@ -1092,7 +1097,7 @@ def main(page: ft.Page):
                 content=ft.Text(
                     character,
                     font_family="Pixelify Sans",
-                    size=20,
+                    size=26,
                     weight=ft.FontWeight.BOLD,
                     color=GLASS_TEXT,
                 ),
@@ -1221,6 +1226,12 @@ def main(page: ft.Page):
 
         page.add(ft.Stack(expand=True, on_size_change=resize_shell, controls=[
             background,
+            # GlassSurface's left/top offsets crop its artwork. Anchor a
+            # separate container so the backdrop receives full-window bounds.
+            ft.Container(
+                content=page_backdrop, left=0, top=0, right=0, bottom=0,
+                ignore_interactions=True,
+            ),
             ft.Column([
                 navbar,
                 content_area,

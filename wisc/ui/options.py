@@ -9,6 +9,7 @@ import sys
 import subprocess
 import flet as ft
 from wisc.ui.controls import LegacySelector, SimpleInput
+from wisc.ui.glass import glass_panel
 from wisc.services import updates as launcher_updates
 from wisc.core.themes import DEFAULT_THEME
 import json
@@ -112,16 +113,16 @@ def build_options_views(
 
 
     def build_option_card(category):
-        return ft.Button(
+        card = ft.Button(
             width=170,
             height=130,
             style=ft.ButtonStyle(
                 bgcolor={
                     ft.ControlState.HOVERED: theme.get("card_hover", theme["card"]),
-                    ft.ControlState.DEFAULT: theme["surface"],
+                    ft.ControlState.DEFAULT: ft.Colors.TRANSPARENT,
                 },
                 side={
-                    ft.ControlState.HOVERED: ft.BorderSide(1, color=theme["btn_primary"]),
+                    ft.ControlState.HOVERED: ft.BorderSide(1, color=theme["border"]),
                     ft.ControlState.DEFAULT: ft.BorderSide(1, color=theme["border"]),
                 },
                 shape=ft.RoundedRectangleBorder(radius=14),
@@ -154,6 +155,7 @@ def build_options_views(
                 ],
             ),
         )
+        return glass_panel(card, width=170, height=130, bgcolor=theme["surface"])
 
     options_categories = [
         {"id": "options_ui", "title": "UI", "icon": ft.Icons.PALETTE_OUTLINED},
@@ -264,7 +266,7 @@ def build_options_views(
                 )
             )
 
-        return ft.Container(
+        return glass_panel(
             bgcolor=theme["surface"],
             border=ft.Border.all(1, color=theme["border"]),
             border_radius=12,
@@ -863,12 +865,9 @@ def build_options_views(
         ),
     )
 
-    def on_card_hover(e, container):
+    def on_card_hover(e, container, resting_color):
         is_hovered = e.data == "true"
-        container.border = ft.Border.all(
-            1,
-            color=theme["btn_primary"] if is_hovered else theme["border"],
-        )
+        container.bgcolor = theme["card_hover"] if is_hovered else resting_color
         container.update()
 
     def mini_badge(text, color=None):
@@ -886,7 +885,7 @@ def build_options_views(
         )
 
     # 1. Header Card (Minimal branding & vision)
-    about_hero_card = ft.Container(
+    about_hero_card = glass_panel(
         bgcolor=theme["surface"],
         border=ft.Border.all(1, color=theme["border"]),
         border_radius=12,
@@ -938,10 +937,10 @@ def build_options_views(
             ],
         ),
     )
-    about_hero_card.on_hover = lambda e, c=about_hero_card: on_card_hover(e, c)
+    about_hero_card.on_hover = lambda e, c=about_hero_card: on_card_hover(e, c, theme["surface"])
 
     # 2. Creator & Links Card (Unified, clean)
-    discord_id_pill_card = ft.Container(
+    discord_id_pill_card = glass_panel(
         bgcolor=theme["card"],
         border=ft.Border.all(1, color=theme["border"]),
         border_radius=8,
@@ -976,13 +975,13 @@ def build_options_views(
             ],
         ),
     )
-    discord_id_pill_card.on_hover = lambda e, c=discord_id_pill_card: on_card_hover(e, c)
+    discord_id_pill_card.on_hover = lambda e, c=discord_id_pill_card: on_card_hover(e, c, theme["card"])
     discord_id_pill = ft.GestureDetector(
         mouse_cursor=ft.MouseCursor.CLICK,
         content=discord_id_pill_card,
     )
 
-    creator_social_card = ft.Container(
+    creator_social_card = glass_panel(
         bgcolor=theme["surface"],
         border=ft.Border.all(1, color=theme["border"]),
         border_radius=12,
@@ -1183,10 +1182,10 @@ def build_options_views(
             ],
         ),
     )
-    creator_social_card.on_hover = lambda e, c=creator_social_card: on_card_hover(e, c)
+    creator_social_card.on_hover = lambda e, c=creator_social_card: on_card_hover(e, c, theme["surface"])
 
     # 3. Game Directory & Specs Card (Clean, minimal)
-    storage_specs_card = ft.Container(
+    storage_specs_card = glass_panel(
         bgcolor=theme["surface"],
         border=ft.Border.all(1, color=theme["border"]),
         border_radius=12,
@@ -1273,7 +1272,7 @@ def build_options_views(
             ],
         ),
     )
-    storage_specs_card.on_hover = lambda e, c=storage_specs_card: on_card_hover(e, c)
+    storage_specs_card.on_hover = lambda e, c=storage_specs_card: on_card_hover(e, c, theme["surface"])
 
     about_subpage = build_settings_page(
         "About",

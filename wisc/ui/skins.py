@@ -10,6 +10,7 @@ from PIL import Image
 import flet as ft
 from wisc.services import skins
 from wisc.ui.skin_viewer import SkinViewer
+from wisc.ui.glass import glass_panel
 from pathlib import Path
 import hashlib
 from wisc.core.storage import get_active_account
@@ -445,7 +446,7 @@ def build_skins_view(page: ft.Page, theme: dict, notify, open_url=None, online_a
         ],
     )
 
-    left_preview_card = ft.Container(
+    left_preview_card = glass_panel(
         width=330,
         padding=22,
         bgcolor=theme["surface"],
@@ -475,7 +476,7 @@ def build_skins_view(page: ft.Page, theme: dict, notify, open_url=None, online_a
         ),
     )
 
-    right_settings_card = ft.Container(
+    right_settings_card = glass_panel(
         width=460,
         padding=28,
         bgcolor=theme["surface"],
@@ -539,7 +540,7 @@ def build_skins_view(page: ft.Page, theme: dict, notify, open_url=None, online_a
     active_acc = get_active_account()
     is_offline_acc = active_acc.get("type") == "offline"
 
-    offline_locked_card = ft.Container(
+    offline_locked_card = glass_panel(
         width=520,
         padding=ft.Padding.all(36),
         border_radius=18,

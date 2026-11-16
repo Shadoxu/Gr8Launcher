@@ -20,6 +20,7 @@ from wisc.ui.controls import (
     launcher_tab, select_tab,
 )
 from wisc.ui.scroll_views import ScrollColumn
+from wisc.ui.glass import glass_panel
 
 
 def account_avatar(account: dict, *, size: int = 40) -> ft.Control:
@@ -72,7 +73,7 @@ def build_accounts_view(
             detail += " · Sign in again to play"
         elif status == "session":
             detail += " · Signed in for this session"
-        rows.append(ft.Container(
+        rows.append(glass_panel(
             key=ft.ValueKey(f"account-{account['id']}"),
             padding=ft.Padding.symmetric(horizontal=16, vertical=12),
             border_radius=12,
@@ -271,7 +272,7 @@ def build_account_login(
         on_click=lambda e: open_url("https://account.ely.by/register", "Opening Ely.by registration..."),
         tooltip="Open Ely.by registration",
     )
-    form_card = ft.Container(
+    form_card = glass_panel(
         expand=6, padding=24, bgcolor=theme["surface"], border_radius=12,
         border=ft.Border.all(1, theme["border"]),
         content=ft.Column([
@@ -285,7 +286,7 @@ def build_account_login(
         ], spacing=16, horizontal_alignment=ft.CrossAxisAlignment.STRETCH),
     )
     artwork = ASSETS_DIR / "banners" / "portal.png"
-    branding_card = ft.Container(
+    branding_card = glass_panel(
         expand=5, padding=24, bgcolor=theme["surface"], border_radius=12,
         border=ft.Border.all(1, theme["border"]),
         content=ScrollColumn([
