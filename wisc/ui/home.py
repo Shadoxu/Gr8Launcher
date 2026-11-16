@@ -18,6 +18,7 @@ from wisc.core.credentials import redact_credentials
 from wisc.ui.components import clickable_mouse_cursor, tooltip
 from wisc.ui.controls import launcher_button
 from wisc.ui.glass import glass_panel
+from wisc.ui.profile_assets import profile_icon
 
 if TYPE_CHECKING:
     from wisc.ui.features import LegacyFeatures
@@ -492,6 +493,7 @@ def build_home_view(*, page: ft.Page, theme: dict, installations: list[dict],
 
     def build_library_card(key: str, target: dict) -> ft.Button:
         selected = launch_selection["key"] == key
+        caption_height = 64
         image = ft.Image(
             src=local_banner(key, target) or fallback_banner(target),
             left=0, top=0, right=0, bottom=0, fit=ft.BoxFit.COVER,
@@ -526,8 +528,22 @@ def build_home_view(*, page: ft.Page, theme: dict, installations: list[dict],
                                 stops=[0.2, 1],
                             ),
                         ),
+                        ft.Container(
+                            key=ft.ValueKey(f"home-profile-icon-{key}"),
+                            left=12, top=0, bottom=caption_height, width=40,
+                            alignment=ft.Alignment.CENTER, ignore_interactions=True,
+                            content=ft.Container(
+                                width=40, height=40, border_radius=6,
+                                shadow=ft.BoxShadow(
+                                    blur_radius=12, spread_radius=1,
+                                    color=ft.Colors.with_opacity(0.65, ft.Colors.BLACK),
+                                    offset=ft.Offset(0, 3),
+                                ),
+                                content=profile_icon(target, size=40),
+                            ),
+                        ),
                         glass_panel(
-                            left=0, right=0, bottom=0, padding=12,
+                            left=0, right=0, bottom=0, padding=12, height=caption_height,
                             bgcolor=theme["card"], border_radius=0,
                             content=ft.Column([
                                 ft.Text(target["name"], size=14, weight=ft.FontWeight.W_600,

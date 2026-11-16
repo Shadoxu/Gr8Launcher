@@ -58,7 +58,6 @@ class ClassicLibraryPage(ft.Container):
         for profile in profiles:
             pid = profile["id"]
             ready = get_profile_version_id(profile) in installed_ids
-            selected = pid == selected_id
 
             def body(icon, info, profile_id=pid):
                 region = profile_drag_region(icon, info, color=theme.MUTED,
@@ -76,7 +75,7 @@ class ClassicLibraryPage(ft.Container):
                 ))
             surface = profile_row(
                 profile, icon=profile_icon(profile), badges=badges, details=profile_summary(profile),
-                glow_color=theme.ACCENT, selected=selected, body_builder=body,
+                glow_color=theme.ACCENT, body_builder=body,
                 actions=[
                     launcher_icon_button(icon=ft.Icons.PLAY_ARROW_ROUNDED, icon_color=theme.ACCENT,
                         tooltip=f"Play {profile['name']}" if ready else f"Install and play {profile['name']}",
@@ -90,6 +89,7 @@ class ClassicLibraryPage(ft.Container):
                     self._menu(profile, busy),
                 ],
             )
+            surface.foreground_decoration = None
             cards.append(ft.Container(
                 key=ft.ValueKey(f"library-profile-{pid}"), data=pid, content=surface,
                 border=ft.Border.all(0, theme.TRANSPARENT), border_radius=12,
