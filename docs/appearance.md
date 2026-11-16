@@ -18,7 +18,7 @@ custom PNG, JPEG, and WebP images. Custom icons are copied into launcher data so
 moving their source image does not lose the selection. Latest Release supports
 the same icon choices and extra Java arguments.
 
-To customize a palette from source, edit its entry in `colors.THEMES`:
+To customize a palette from source, edit its entry in `gr8launcher.core.themes.THEMES`:
 
 | Theme token | Controls |
 | --- | --- |
@@ -27,7 +27,7 @@ To customize a palette from source, edit its entry in `colors.THEMES`:
 | `text_primary`, `text_secondary`, `text_muted` | Text and icons |
 | `border` | Card and input boundaries |
 
-`ui_theme.apply_legacy_theme` maps these tokens to the retained feature controls.
+`gr8launcher.ui.theme.apply_legacy_theme` maps these tokens to the retained feature controls.
 Colors retain their roles through theme changes, including button styles and
 transparent tints; a shared hex value does not conflate background and text.
 Error, warning, and loader colors keep their separate meanings. Minecraft art

@@ -1,5 +1,6 @@
 # Deploy the website, its Node build tools, and root API functions.
 REF/
+gr8launcher/
 .assets/
 .github/
 .agents/

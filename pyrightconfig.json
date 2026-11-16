@@ -1,7 +1,8 @@
 {
     "typeCheckingMode": "off",
     "include": [
-        "*.py",
+        "main.py",
+        "gr8launcher",
         "tools"
     ],
     "exclude": [

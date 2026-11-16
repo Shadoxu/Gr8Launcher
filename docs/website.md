@@ -18,8 +18,8 @@ The root `vercel.json` explicitly declares one `website` service:
 - Service routes map clean page URLs to their HTML files and return the custom
   `404.html` document with HTTP 404 after static files and functions are checked.
 
-This declaration excludes the desktop Python application and `REF/` backup
-applications from the set of services deployed. `.vercelignore` filters uploads;
+This declaration deploys the website independently of the desktop Python
+application and local work folders. `.vercelignore` filters uploads;
 it does not prevent the GitHub import screen from finding application folders.
 Build and function settings belong inside the website service in Services mode.
 The service's `web/api/release.mjs` supplies current release metadata.

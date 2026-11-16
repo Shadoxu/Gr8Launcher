@@ -5,17 +5,6 @@ The Mods top tab has a content selector for **Mods** and
 Manage Mods button opens the profile from that row. The Mods profile selection is
 independent of the profile selected for Play.
 
-Preview screenshots use isolated sample data:
-[Installed](screenshots/gr8-launcher-mods-installed.png),
-[Browse](screenshots/gr8-launcher-mods-browse.png),
-[Profile selector](screenshots/gr8-launcher-mods-selector.png),
-[Mod details](screenshots/gr8-launcher-mods-details.png),
-[Versions](screenshots/gr8-launcher-mods-versions.png), and
-[Unavailable profile](screenshots/gr8-launcher-mods-unavailable.png).
-The [Undo notification](screenshots/gr8-launcher-mods-undo.png) restores a removed mod.
-Details previews also include the [larger window](screenshots/gr8-launcher-mods-details-large.png)
-and [formatted content](screenshots/gr8-launcher-mods-details-content.png).
-
 ## Layout
 
 The custom title bar and top navigation stay visible. The content has the classic
@@ -96,7 +85,7 @@ The custom title bar and top navigation stay visible. The content has the classi
   place. Wrong or changed files fail verification. Additional required files
   discovered during planning must also be selected. Restricted CDN URLs are
   never synthesized or bypassed.
-- `SimpleInput` and `SimpleButton` live in `ui_controls.py` and are imported by
+- `SimpleInput` and `SimpleButton` live in `gr8launcher/ui/controls.py` and are imported by
   the launcher and Mods. Selectors and buttons, profile surfaces, list controls,
   brief `StaggeredReveal` transitions, dialog host, and toast host are reused.
   Normal searching retains matching row objects. Back from a mod page restores
@@ -179,7 +168,7 @@ The custom title bar and top navigation stay visible. The content has the classi
   description fills the available width beside the 236 px metadata panel, with
   a consistent 24 px gap as the window resizes. Metadata and external links share
   a compact frosted panel; both the description and panel scroll independently.
-- `mod_markdown.py` converts embedded HTML to native Markdown before rendering.
+- `gr8launcher/mods/markdown.py` converts embedded HTML to native Markdown before rendering.
   It preserves links, images, nested lists, tables, warnings, FAQ contents, and
   code examples. HTML presentation attributes are omitted; embedded media is
   offered as a link. Existing Markdown stays intact, including fenced/indented

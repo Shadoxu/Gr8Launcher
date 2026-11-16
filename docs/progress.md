@@ -56,7 +56,7 @@ Use the context manager so exceptions and cancellation release the operation:
 ```python
 import asyncio
 
-from ui_progress import track_progress
+from gr8launcher.ui.progress import track_progress
 
 async def refresh_skin(progress_host):
     with track_progress(progress_host, "Refreshing skin...", priority=50):
@@ -92,18 +92,12 @@ are not included in a clone or required by the GitHub build.
 
 ```powershell
 python -B -m unittest temp.test_ui_progress temp.test_ui_mods temp.test_mod_services
-python -B temp/check_progress_motion.py
-python -B temp/check_progress_motion.py --shimmer-only
-py -3.14 -B temp/check_mods_ui.py --progress-only
+python -B tools/capture_screenshot.py --route mods --output temp/progress-mods.png
 ```
 
-The browser check uses isolated data and mocked downloads/skin responses. It
-verifies [search loading](screenshots/gr8-launcher-progress-fetch.png),
-[measured downloads](screenshots/gr8-launcher-progress-download.png),
-[a larger window](screenshots/gr8-launcher-progress-download-large.png),
-[navigation during a download](screenshots/gr8-launcher-progress-navigation.png),
-[idle restoration](screenshots/gr8-launcher-progress-idle.png), and
-[skin refresh](screenshots/gr8-launcher-progress-skin.png).
+Local screenshots use isolated sample data in the real Flet web client. Progress
+previews cover search loading, measured downloads, larger windows, navigation
+during a download, idle restoration, and skin refresh.
 The motion check samples rendered fill positions at 1100x650 and 1366x768,
 including interrupted transitions, unknown progress, and immediate idle reset.
 The shimmer check verifies moving beams at a steady percentage, clipping to the

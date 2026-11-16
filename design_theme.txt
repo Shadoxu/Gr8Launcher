@@ -2,11 +2,11 @@ The launcher uses the restored classic interface from wisc-1.2.0.
 
 Keep its top navigation, Mojangles title, large home banner, library cards,
 compact profile rows, skin preview, and Options dashboard. The selected theme
-comes from colors.THEMES; Earth 2 is the default. Preserve the original rounded
+comes from gr8launcher.core.themes.THEMES; Earth 2 is the default. Preserve the original rounded
 cards and their subtle borders, hover feedback, and selection highlights.
 
 Current mods, modpacks, updater dialogs, notifications, and progress inherit the
-selected classic palette through ui_theme.apply_legacy_theme. Keep their useful
+selected classic palette through gr8launcher.ui.theme.apply_legacy_theme. Keep their useful
 behavior integrated into the classic layout. Use Mojangles for the original
 launcher title and home banner, and system fonts for page headings, profile
 names, controls, and dense details. Retain all bundled font licenses.

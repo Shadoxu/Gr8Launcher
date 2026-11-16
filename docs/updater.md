@@ -28,12 +28,12 @@ application replacement and relaunch.
 | [`VERSION`](../VERSION) | Single source of truth for release version (e.g. `2.3.0`). |
 | [`tools/build_windows.py`](../tools/build_windows.py) | Builds Flet/PyInstaller `onedir` package, writes `VERSION` alongside `Gr8Launcher.exe`, and emits portable `.zip`, setup `.exe`, and `SHA256SUMS.txt`. |
 | [`packaging/windows.iss`](../packaging/windows.iss) | Fixed AppId `{449A7BDC-D374-4AAB-8D31-D699214AC088}`; the source escapes the opening brace as `{{`. Remembers installation scope, directory, and tasks. Sets `CloseApplications=yes`, `RestartApplications=no`, and `skipifsilent` on post-install launch. All-user setup requires elevation. |
-| [`storage.py`](../storage.py) | Resolves the Minecraft data directory and stores settings in its `gr8launcher/settings.json`, normally `%APPDATA%\.minecraft\gr8launcher\settings.json` on Windows. Keys are explicitly validated on load. |
-| [`ui_toasts.py`](../ui_toasts.py) | `ToastHost` provides non-blocking action toasts (e.g. "Update Available", "Update Ready"). |
-| [`ui_progress.py`](../ui_progress.py) | Centralized progress management for concurrent background tasks. |
-| [`main.py`](../main.py) | Owns startup sequence, settings views, and window lifecycle. |
-| [`state.py`](../state.py), [`ui_mods.py`](../ui_mods.py) | `launcher_log_state["running"]` covers launch, installation, repair, and game activity. `ModsPage.busy` includes mod and modpack mutations. |
-| [`launcher_updates.py`](../launcher_updates.py), [`ui_updates.py`](../ui_updates.py) | Implement release discovery, verified preparation, source/mock guards, the About card, update dialog, progress, and helper handoff. |
+| [`gr8launcher/core/storage.py`](../gr8launcher/core/storage.py) | Resolves the Minecraft data directory and stores settings in its `gr8launcher/settings.json`, normally `%APPDATA%\.minecraft\gr8launcher\settings.json` on Windows. Keys are explicitly validated on load. |
+| [`gr8launcher/ui/toasts.py`](../gr8launcher/ui/toasts.py) | `ToastHost` provides non-blocking action toasts (e.g. "Update Available", "Update Ready"). |
+| [`gr8launcher/ui/progress.py`](../gr8launcher/ui/progress.py) | Centralized progress management for concurrent background tasks. |
+| [`main.py`](../main.py), [`gr8launcher/app.py`](../gr8launcher/app.py) | Run the startup guard and own page orchestration, settings views, and window lifecycle. |
+| [`gr8launcher/core/state.py`](../gr8launcher/core/state.py), [`gr8launcher/ui/mods.py`](../gr8launcher/ui/mods.py) | `launcher_log_state["running"]` covers launch, installation, repair, and game activity. `ModsPage.busy` includes mod and modpack mutations. |
+| [`gr8launcher/services/updates.py`](../gr8launcher/services/updates.py), [`gr8launcher/ui/updates.py`](../gr8launcher/ui/updates.py) | Implement release discovery, verified preparation, source/mock guards, the About card, update dialog, progress, and helper handoff. |
 | [`tools/updater/Program.cs`](../tools/updater/Program.cs), [`tools/build_updater.py`](../tools/build_updater.py) | Compile and run the standalone `updater.exe` with a themed progress window, target lock, file journal, startup acknowledgement, and recovery. |
 
 The current PyInstaller 6 `onedir` layout uses `_internal/` for dependencies and
@@ -65,7 +65,7 @@ IS_PACKAGED: bool = getattr(sys, "frozen", False)
 
 ### 3.2 Decoupled, Pure-Python Core
 
-- `launcher_updates.py` contains all version parsing, GitHub Releases API communication, ETag caching, checksum verification, and installation discovery.
+- `gr8launcher/services/updates.py` contains all version parsing, GitHub Releases API communication, ETag caching, checksum verification, and installation discovery.
 - **No Flet dependency:** Use Python standard libraries, including `urllib.request`, `hashlib`, `json`, `zipfile`, `pathlib`, `subprocess`, and Windows-specific helpers such as `winreg`. Run blocking I/O in workers and deliver progress to the UI loop through callbacks.
 - **Testing hygiene:** All unit tests for updater logic reside in the local-only, git-ignored `temp/` folder (e.g. `temp/test_launcher_updates.py`), adhering to repository testing guidelines.
 
@@ -163,7 +163,7 @@ release, not another lookup of "latest."
 
 1. **Streaming Download:**
    - Stream to the operation's `package.part`, never a shared `<filename>.part`.
-   - Update `ui_progress.py` with bytes received, total size, and download rate.
+   - Update `gr8launcher/ui/progress.py` with bytes received, total size, and download rate.
    - Cancellation is cooperative and bounded by the network read timeout. Close streams before deleting the operation's partial file. Apply a total deadline, size limits, and disk-space checks.
 2. **Checksum Verification:**
    - Download `SHA256SUMS.txt` from the pinned release and checksum asset.
@@ -239,7 +239,7 @@ The launcher detects its own installation mode at runtime:
 
 On Restart now, gate application on all of the following:
 
-- `state.launcher_log_state["running"]` is false, covering installation, repair, launch, and game activity.
+- `gr8launcher.core.state.launcher_log_state["running"]` is false, covering installation, repair, launch, and game activity.
 - `mods_content.busy` is false, covering mod and modpack mutations.
 - No competing updater or other launcher copy is using the same installation.
 
@@ -466,7 +466,7 @@ Update preferences and operational state are stored cleanly in existing storage 
 
 Operational state is kept separate from `settings.json` so that update metadata caching never pollutes Minecraft profile settings or roaming profiles.
 
-Add both preferences to `storage.load_settings()` validation and defaults. Write
+Add both preferences to `gr8launcher.core.storage.load_settings()` validation and defaults. Write
 cache, handoff, journal, acknowledgement, and result records atomically; flush
 durable transaction changes before proceeding. Validate all records on read.
 Malformed or unknown schemas disable application and preserve recovery files.
@@ -495,7 +495,7 @@ backups; preserve existing credential storage and notification redaction.
 
 ## 11. Implementation Sequence
 
-1. **Phase 1: Core Engine (`launcher_updates.py`)**
+1. **Phase 1: Core Engine (`gr8launcher/services/updates.py`)**
    - Implement version comparison logic (`compare_versions`, `parse_version`).
    - Implement GitHub API client with ETag headers and timeout handling.
    - Implement package download streamer with SHA-256 verification and cancellation.

@@ -1,7 +1,0 @@
-flet
-minecraft-launcher-lib
-pillow
-requests
-tomli>=2; python_version < '3.11'
-keyring>=25
-pypresence>=4.6.2,<5

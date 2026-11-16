@@ -2,7 +2,23 @@
 
 ## Project Structure & Module Organization
 
-`main.py` runs the Python/Flet UI. `launcher.py` and `launcher_services.py` handle Minecraft installation and launch; `storage.py` and `credential_store.py` manage persistence. UI components live in `ui_*.py`. Bundled artwork/fonts live in `.assets/`, tests/scratch work in `temp/`, build utilities and the Java skin bridge in `tools/`, installer configuration in `packaging/`, and documentation in `docs/`.
+`main.py` is the launch entry point; `gr8launcher/app.py` owns Flet page orchestration. Application modules live in four packages:
+
+| Folder | Start here for |
+| --- | --- |
+| `gr8launcher/ui/` | Pages, controls, dialogs, profiles, themes, motion, progress, and notifications |
+| `gr8launcher/services/` | Minecraft launch/install, instance discovery, profile creation, authentication, skins, artwork, Discord, and updates |
+| `gr8launcher/mods/` | Mod providers, compatibility, downloads, metadata, and modpacks |
+| `gr8launcher/core/` | Shared state, settings/profiles, native credentials, palette definitions, and resource paths |
+
+Bundled artwork/fonts live in `.assets/`, local tests/scratch work in ignored `temp/`, build/release utilities and the Java skin bridge in `tools/`, installer configuration in `packaging/`, documentation in `docs/`, and the website in `web/` with deployment API functions in `api/`.
+
+## Agent Navigation
+
+- Use [docs/architecture.md](docs/architecture.md) for the module map and resource/entry-point rules. Search the relevant package first, for example `rg -n 'ProfileList' gr8launcher/ui` or `rg --files gr8launcher tools`.
+- Avoid whole-workspace scans of generated files or local tests unless the task needs them. Old source copies belong outside the repository; do not recreate `REF/` or `new_ui/` backups.
+- Use absolute `gr8launcher.*` imports. Keep package `__init__.py` files lightweight and avoid compatibility copies at the repository root.
+- Put new scratch output in `temp/<task>/` and remove it when finished. Retain useful local regression tests; release tools must run without `temp/`.
 
 ## Build, Test, and Development Commands
 
@@ -18,7 +34,7 @@ Run from the repository root in a virtual environment. Source supports Python 3.
 
 Follow `design_theme.txt` and the restored classic components:
 
-- **Palette:** selectable Minecraft themes in `colors.py`, defaulting to Earth 2. Use the selected theme's background, surface, text, and button tokens. Retained feature pages inherit these through `ui_theme.apply_legacy_theme`.
+- **Palette:** selectable Minecraft themes in `gr8launcher/core/themes.py`, defaulting to Earth 2. Use the selected theme's background, surface, text, and button tokens. Retained feature pages inherit these through `gr8launcher.ui.theme.apply_legacy_theme`.
 - **Typography/assets:** keep the original Mojangles title and existing Minecraft artwork. Its font and license live in `.assets/font/`; retain all bundled font licenses. Use system fonts for dense details.
 - **Shape:** preserve the original rounded banner, library cards, compact profile rows, and options cards. Keep selection and focus feedback visible.
 - **Dropdowns:** use `AcrylicSelector`, or the `LegacySelector` adapter for classic forms. Menus stay anchored to the field width, with 48px closed fields, 5px corners, and theme-colored labels/chevrons. Use one control per filter.

@@ -121,7 +121,7 @@ def build(version: str, compiler: Path | None) -> list[Path]:
     # Import the UI-independent inventory writer from the project source.
     if str(PROJECT_ROOT) not in sys.path:
         sys.path.insert(0, str(PROJECT_ROOT))
-    from launcher_updates import generate_manifest
+    from gr8launcher.services.updates import generate_manifest
     generate_manifest(app_dir, version)
 
     archive_name = f"{APP_NAME}-{version}-windows-x64"

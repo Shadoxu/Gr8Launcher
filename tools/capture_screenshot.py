@@ -41,16 +41,22 @@ def find_browser(explicit: str | None) -> Path:
     raise RuntimeError("Install Edge or Chrome, or pass --browser PATH.")
 
 
-def serve_preview(directory: Path, port: int, route: str = "home") -> None:
-    source = directory / "source"
+def copy_preview_source(source: Path) -> None:
+    """Copy release inputs without local tests, backups, or runtime caches."""
     source.mkdir()
-    for module in PROJECT_ROOT.glob("*.py"):
-        shutil.copy2(module, source / module.name)
+    shutil.copy2(PROJECT_ROOT / "main.py", source / "main.py")
+    shutil.copytree(PROJECT_ROOT / "gr8launcher", source / "gr8launcher",
+                    ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
     # The About view resolves the version beside the copied application source.
     if (PROJECT_ROOT / "VERSION").is_file():
         shutil.copy2(PROJECT_ROOT / "VERSION", source / "VERSION")
     shutil.copytree(PROJECT_ROOT / ".assets", source / ".assets",
                     ignore=shutil.ignore_patterns("cache", "__pycache__"))
+
+
+def serve_preview(directory: Path, port: int, route: str = "home") -> None:
+    source = directory / "source"
+    copy_preview_source(source)
     sys.path.insert(0, str(source))
     # Patch the data directory before importing any launcher modules. The copied
     # source also prevents legacy .data migration from touching local settings.
@@ -58,7 +64,7 @@ def serve_preview(directory: Path, port: int, route: str = "home") -> None:
     minecraft_root = directory / "minecraft"
     minecraft_launcher_lib.utils.get_minecraft_directory = lambda: str(minecraft_root)
 
-    import storage
+    from gr8launcher.core import storage
     assert storage.DATA_DIR.resolve().is_relative_to(directory.resolve())
     if not storage.save_accounts({
         "active_account_id": "screenshot-player",
@@ -86,7 +92,7 @@ def serve_preview(directory: Path, port: int, route: str = "home") -> None:
                                   "enable_orbs": False}):
         raise RuntimeError("Could not create screenshot settings.")
 
-    import main as launcher_ui
+    from gr8launcher import app as launcher_ui
     import flet as ft
     import uvicorn
     # Use the same bundled assets as the desktop app, with web-relative paths.
@@ -96,9 +102,9 @@ def serve_preview(directory: Path, port: int, route: str = "home") -> None:
     launcher_ui.get_version_catalog = lambda: (
         [{"id": "1.21.4", "type": "release"}, {"id": "1.21.1", "type": "release"}], "1.21.4", True)
     launcher_ui.check_internet_connection = lambda *args, **kwargs: True
-    import launcher_services
+    from gr8launcher.services import instances as launcher_services
     launcher_services.check_internet_connection = lambda *args, **kwargs: True
-    import banners
+    from gr8launcher.services import banners
     banners.get_local_banner_for_target = lambda target, *args: str(Path("banners") / (
         "portal.png" if str((target or {}).get("loader", "Vanilla")).casefold() != "vanilla" else "farmhouse.png"))
 
@@ -115,7 +121,7 @@ def serve_preview(directory: Path, port: int, route: str = "home") -> None:
             # Wait for the launcher's entrance animations before checking paint.
             await asyncio.sleep(2)
             if route != "home":
-                import state
+                from gr8launcher.core import state
                 state.navigation_state["navigate"](route)
                 await asyncio.sleep(1)
             (directory / "ready").write_text("ready", encoding="utf-8")
@@ -238,6 +244,7 @@ def capture(output: Path, browser: Path, *, route: str = "home") -> None:
                             "options_accounts": ("Manage Accounts", "Player"),
                             "options_about": ("About", "Gr8 Launcher"),
                             "new_installation": ("New Profile", "Save Profile"),
+                            "account_login": ("Add Account", "Your next adventure", "Log In"),
                         }[route]
                         if (directory / "ready").is_file() and all(label in labels for label in expected):
                             break
@@ -288,7 +295,7 @@ def main() -> None:
     parser.add_argument("--serve", type=Path, help=argparse.SUPPRESS)
     parser.add_argument("--port", type=int, help=argparse.SUPPRESS)
     parser.add_argument("--route", default="home", choices=("home", "installations", "mods", "skins", "options",
-                        "options_updates", "options_accounts", "options_about", "new_installation"),
+                        "options_updates", "options_accounts", "options_about", "new_installation", "account_login"),
                         help="Launcher page to capture using isolated sample data")
     parser.add_argument("--width", type=int, default=1100)
     parser.add_argument("--height", type=int, default=650)

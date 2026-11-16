@@ -122,41 +122,28 @@ Separate game instances live in the Minecraft directory's `instances` folder unl
 
 ## Project structure
 
-<details>
-<summary>Explore the Python modules and bundled assets</summary>
-
-~~~text
+```text
 Gr8Launcher/
-├── main.py                # Application entry point and page orchestration
-├── launcher.py            # Minecraft installation, verification, and launch
-├── launcher_services.py   # Connectivity, local discovery, and game logs
-├── storage.py             # Persistent settings, accounts, and profiles
-├── state.py               # Shared runtime state
-├── profile_creation.py    # Profile creation and instance folder handling
-├── ely_auth.py            # Ely.by authentication
-├── credential_store.py    # Native credential storage and session fallback
-├── skins.py               # Skin caching, rendering, and Java companion setup
-├── skin_viewer.py         # Interactive player skin rendering and movement
-├── colors.py              # Original selectable Minecraft themes
-├── banners.py             # Cached and version-specific banner artwork
-├── ui_components.py       # Classic top navigation and shared controls
-├── ui_home.py             # Home banner, profile shelf, launch controls, and logs
-├── ui_library.py          # Profile manager and unconfigured version folders
-├── ui_options.py          # Classic options and accounts
-├── ui_installations.py    # Profile editor
-├── ui_skins.py            # Classic skin preview and customization
-├── ui_legacy_features.py  # Current features in the classic layout
-├── ui_profiles.py         # Profile cards and ordering
-├── ui_dialogs.py          # Profile dialogs
-├── ui_motion.py           # Navigation and entrance animations
-├── .assets/               # Fonts, icons, banners, and default skins
-├── docs/screenshots/      # Bundled launcher preview for offline viewing
-├── tools/                 # Build, release, and Java skin bridge utilities
-├── temp/                  # AI tests and local scratch work
-└── requirements.txt       # Python dependencies
-~~~
+├── main.py                 # Launch entry point and updater startup guard
+├── gr8launcher/
+│   ├── app.py              # Navigation, page wiring, and launch actions
+│   ├── ui/                 # Flet pages, controls, dialogs, and feedback
+│   ├── services/           # Minecraft, profiles, accounts, skins, and updates
+│   ├── mods/               # Providers, compatibility, mod installs, modpacks
+│   └── core/               # State, storage, credentials, palettes, and paths
+├── .assets/                # Minecraft artwork, fonts, skins, and licenses
+├── tools/                  # Build, release, screenshots, and Java skin bridge
+├── packaging/              # Windows installer configuration
+├── web/                    # Website source
+├── api/                    # Website deployment API functions
+├── docs/                   # Feature docs, code map, and release notes
+├── temp/                   # Ignored local regression tests and scratch work
+└── requirements.txt        # Runtime dependencies
+```
 
-</details>
+See the [code map](docs/architecture.md) for individual modules, resource paths,
+and focused checks. Build and release tools work without local scratch files or
+reference projects.
 
 Keep all test scripts, validation scripts, and scratch output local in the
 ignored `temp/` directory. They are not included in a clone or required by the

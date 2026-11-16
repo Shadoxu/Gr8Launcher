@@ -29,7 +29,7 @@ setting also clears it immediately, without waiting for the update interval.
 
 ## Application configuration
 
-The public application ID lives in `discord_presence.py`. To test another
+The public application ID lives in `gr8launcher/services/discord_presence.py`. To test another
 application without changing the source, set `GR8_DISCORD_APPLICATION_ID` before
 starting the launcher. No bot token, OAuth login, or client secret is required.
 The activity name comes from the application's name in the
