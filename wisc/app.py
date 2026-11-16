@@ -28,6 +28,7 @@ from wisc.ui.glass import glass_palette
 from wisc.ui.features import LegacyFeatures, load_ui_installations as load_installations
 from wisc.ui.library import build_library_view
 from wisc.ui.home import build_home_view
+from wisc.ui.window import build_window_resize_handles
 from wisc.ui.shell import (
     GLASS_COLOR, GLASS_MUTED, GLASS_TEXT, HOME_BACKDROP_OPACITY,
     TITLE_BAR_HEIGHT, LauncherBackground,
@@ -1241,6 +1242,7 @@ def main(page: ft.Page):
                 ft.Container(padding=ft.Padding.symmetric(horizontal=8), content=features.progress),
             ], expand=True, spacing=0, horizontal_alignment=ft.CrossAxisAlignment.STRETCH),
             features.toasts,
+            *build_window_resize_handles(page),
         ]))
         features.start()
         features.player_changed()
