@@ -232,7 +232,13 @@ def capture(output: Path, browser: Path, *, route: str = "home") -> None:
                         # Flutter exposes its rendered labels when semantics is enabled.
                         labels = devtools.evaluate("""(() => {
                             document.querySelector('flt-semantics-placeholder')?.click();
-                            return document.body?.innerText || '';
+                            // Flutter may merge a card's text and images into
+                            // one accessible label instead of DOM text nodes.
+                            const accessibleLabels = Array.from(
+                                document.querySelectorAll('[aria-label]'),
+                                element => element.getAttribute('aria-label')
+                            );
+                            return [document.body?.innerText || '', ...accessibleLabels].join('\\n');
                         })()""") or ""
                         expected = {
                             "onboarding": ("WELCOME", "to Wisc.", "Continue"),
