@@ -104,6 +104,39 @@ class ModPlatformClient(ModrinthClient):
             raise ValueError("Modrinth returned a project that is not a modpack.")
         return data
 
+    def search_content(self, query: str, minecraft_version: str, kind: str, *, provider: str = "modrinth",
+                       index: str = "downloads", offset: int = 0, limit: int = 20) -> dict:
+        if kind not in {"shader", "resourcepack"}:
+            raise ValueError("Choose shaders or texture packs.")
+        if provider == "curseforge":
+            return self.curseforge.search_content(query, minecraft_version, kind, index=index, offset=offset, limit=limit)
+        if provider != "modrinth":
+            raise ValueError("Choose Modrinth or CurseForge.")
+        data = self._get("/search", {"query": query, "index": index, "offset": offset, "limit": limit,
+                                   "facets": json.dumps([[f"project_type:{kind}"], [f"versions:{minecraft_version}"]])})
+        if not isinstance(data, dict) or not isinstance(data.get("hits"), list):
+            raise ValueError("Modrinth returned an invalid content search result.")
+        if any(not isinstance(hit, dict) or hit.get("project_type") != kind or not hit.get("project_id")
+               for hit in data["hits"]):
+            raise ValueError("Modrinth returned a different content type.")
+        return data
+
+    def content_versions(self, project_id: str, minecraft_version: str, kind: str) -> list[dict]:
+        if kind not in {"shader", "resourcepack"}:
+            raise ValueError("Choose shaders or texture packs.")
+        if self._is_curseforge(project_id):
+            return self.curseforge.content_versions(project_id, minecraft_version, kind)
+        project = super().project(project_id)
+        if project.get("id") != project_id or project.get("project_type") != kind:
+            raise ValueError("This project is not the requested content type.")
+        versions = super().project_versions(project_id, minecraft_version)
+        if any(version.get("project_id") != project_id for version in versions):
+            raise ValueError("Modrinth returned a different project's versions.")
+        return [{**version, "files": [{**file, "content_type": kind} for file in version.get("files", [])
+                                       if str(file.get("filename", "")).lower().endswith(".zip")]}
+                for version in versions if minecraft_version in version.get("game_versions", [])
+                and any(str(file.get("filename", "")).lower().endswith(".zip") for file in version.get("files", []))]
+
     def modpack_project(self, project_id: str) -> dict:
         if self._is_curseforge(project_id):
             return self.curseforge.modpack_project(project_id)

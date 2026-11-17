@@ -18,7 +18,7 @@ from wisc.core.credentials import CredentialStore
 from wisc.mods.compatibility import supported_mod_loaders
 from wisc.mods.manager import (MAX_JAR_BYTES, MAX_PACK_BYTES, MetadataUnavailable, ModrinthClient,
                           _RangeJar, _digest, _fabric_loader_metadata,
-                          primary_file, safe_archive_name, safe_jar_name, validate_mod_download_url)
+                          primary_file, primary_content_file, safe_archive_name, safe_jar_name, validate_mod_download_url)
 
 
 LOADER_TYPES = {"forge": 1, "fabric": 4, "quilt": 5, "neoforge": 6}
@@ -292,6 +292,46 @@ class CurseForgeClient(ModrinthClient):
             raise ValueError("CurseForge returned an invalid modpack list.")
         return {"hits": [self._project(item, content_type="modpack") for item in result["data"]],
                 "total_hits": result.get("pagination", {}).get("totalCount", len(result["data"]))}
+
+    def search_content(self, query: str, minecraft_version: str, kind: str, *, index: str = "downloads",
+                       offset: int = 0, limit: int = 20) -> dict:
+        if kind not in {"shader", "resourcepack"}:
+            raise ValueError("Choose shaders or texture packs.")
+        result = self._request("/mods/search", {
+            "gameId": 432, "classId": CONTENT_CLASSES[kind][0], "gameVersion": minecraft_version,
+            "searchFilter": query, "sortField": {"downloads": 6, "relevance": 2, "updated": 3, "newest": 11}.get(index, 6),
+            "sortOrder": "desc", "index": offset, "pageSize": min(50, limit),
+        })
+        if not isinstance(result["data"], list):
+            raise ValueError("CurseForge returned an invalid content list.")
+        return {"hits": [self._project(item, content_type=kind) for item in result["data"]],
+                "total_hits": result.get("pagination", {}).get("totalCount", len(result["data"]))}
+
+    def content_versions(self, project_id: str, minecraft_version: str, kind: str) -> list[dict]:
+        if kind not in {"shader", "resourcepack"}:
+            raise ValueError("Choose shaders or texture packs.")
+        number = self._project_number(project_id)
+        data = self._request(f"/mods/{number}")["data"]
+        if curseforge_project_id(data["id"]) != project_id:
+            raise ValueError("CurseForge returned a different project.")
+        self._project(data, content_type=kind)
+        versions = []
+        for offset in range(0, 10000, 50):
+            result = self._request(f"/mods/{number}/files", {"gameVersion": minecraft_version, "index": offset, "pageSize": 50})
+            files = result["data"]
+            if not isinstance(files, list):
+                raise ValueError("CurseForge returned an invalid content version list.")
+            for item in files:
+                version = self._file(item, expected_project=project_id, content_type=kind)
+                if minecraft_version in version["game_versions"] and not version.get("_server_only"):
+                    if primary_content_file(version)["filename"].lower().endswith(".zip"):
+                        versions.append(version)
+            total = result.get("pagination", {}).get("totalCount")
+            if len(files) < 50 or isinstance(total, int) and offset + len(files) >= total:
+                break
+        else:
+            raise ValueError("CurseForge returned too many content versions.")
+        return sorted(versions, key=lambda version: version["date_published"], reverse=True)
 
     def modpack_project(self, project_id: str) -> dict:
         number = self._project_number(project_id)

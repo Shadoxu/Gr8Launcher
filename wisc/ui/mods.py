@@ -23,6 +23,7 @@ from wisc.ui.mod_list import ModList
 from wisc.ui.mod_details import ModDetailsPage
 from wisc.ui.mod_install import ModInstallReview
 from wisc.ui.modpacks import CONTENT_OPTIONS, ModpacksPage
+from wisc.ui.content_packs import ContentPacksPage
 from wisc.ui.progress import ProgressHost, ProgressTask, track_progress
 
 
@@ -198,8 +199,16 @@ class ModsPage(ft.Container):
             client=self.client, runtime_directory=runtime_directory,
             other_busy=lambda: self._mods_busy or self.checking_updates, progress=progress, entrance=entrance,
         )
+        self.content_packs_page = ContentPacksPage(
+            page, client=self.client, get_profiles=get_profiles, selected_profile=selected_profile,
+            game_directory=game_directory, is_running=is_running, notify=notify, dialogs=dialogs,
+            open_folder=open_folder, on_changed=on_changed, on_content_change=self._content_changed,
+            configure_curseforge=self._configure_curseforge,
+            other_busy=lambda: self._mods_busy or self.modpacks_page.busy or self.checking_updates,
+            progress=progress, entrance=entrance,
+        )
         super().__init__(expand=True, padding=ft.Padding.only(left=28, right=28, top=20, bottom=16),
-                         content=ft.Stack([self.mods_host, self.modpacks_page], expand=True))
+                         content=ft.Stack([self.mods_host, self.modpacks_page, self.content_packs_page], expand=True))
         self.list_reveal = StaggeredReveal(page, self.list_host)
         self.selection_reveal = StaggeredReveal(page, self.selection_host)
         self._render()
@@ -207,22 +216,25 @@ class ModsPage(ft.Container):
     @property
     def busy(self) -> bool:
         packs = getattr(self, "modpacks_page", None)
-        return self._mods_busy or bool(packs and packs.busy)
+        content = getattr(self, "content_packs_page", None)
+        return self._mods_busy or bool(packs and packs.busy) or bool(content and content.busy)
 
     @busy.setter
     def busy(self, value: bool) -> None:
         self._mods_busy = value
 
     def _content_changed(self, e) -> None:
-        selector = self.modpacks_page.content_selector if self.content_type == "modpacks" else self.content_selector
+        selector = (self.modpacks_page.content_selector if self.content_type == "modpacks" else
+                    self.content_packs_page.content_selector if self.content_type in {"shader", "resourcepack"} else self.content_selector)
         self.set_content_type(selector.value)
 
     def set_content_type(self, kind: str) -> None:
-        if kind not in {"mods", "modpacks"} or kind == self.content_type:
+        if kind not in dict(CONTENT_OPTIONS) or kind == self.content_type:
             return
         if self._operation_in_progress:
             self.content_selector.refresh_options(CONTENT_OPTIONS, self.content_type)
             self.modpacks_page.content_selector.refresh_options(CONTENT_OPTIONS, self.content_type)
+            self.content_packs_page.content_selector.refresh_options(CONTENT_OPTIONS, self.content_type)
             self._update()
             return
         active = self._active
@@ -230,8 +242,10 @@ class ModsPage(ft.Container):
         self.content_type = kind
         self.mods_host.visible = kind == "mods"
         self.modpacks_page.visible = kind == "modpacks"
+        self.content_packs_page.visible = kind in {"shader", "resourcepack"}
         self.content_selector.refresh_options(CONTENT_OPTIONS, kind)
         self.modpacks_page.content_selector.refresh_options(CONTENT_OPTIONS, kind)
+        self.content_packs_page.content_selector.refresh_options(CONTENT_OPTIONS, kind)
         if active:
             self.enter()
         self._render()
@@ -243,6 +257,8 @@ class ModsPage(ft.Container):
 
     @property
     def reveal_controls(self) -> list[ft.Control]:
+        if self.content_type in {"shader", "resourcepack"}:
+            return self.content_packs_page.reveal_controls
         if self.content_type == "modpacks":
             return self.modpacks_page.reveal_controls
         if self._selection_open:
@@ -254,7 +270,7 @@ class ModsPage(ft.Container):
     def did_mount(self) -> None:
         # The surrounding Home view can still be removed by a full-page route.
         # Restore a deep scroll after the client has actually mounted the list.
-        if self.content_type == "modpacks":
+        if self.content_type != "mods":
             return
         if self._active and self._saved_scroll and not self._details_open and not self._selection_open:
             self._page.run_task(self._restore_scroll, self._generation, self._saved_scroll)
@@ -271,16 +287,22 @@ class ModsPage(ft.Container):
                 pass
 
     def enter(self, profile_id: str | None = None, *, defer_load: bool = False) -> None:
-        if profile_id and self.content_type == "modpacks":
+        if profile_id and self.content_type != "mods":
             if self._operation_in_progress:
                 return
-            self.modpacks_page.leave()
+            self.leave()
             self.content_type = "mods"
             self.mods_host.visible = True
             self.modpacks_page.visible = False
+            self.content_packs_page.visible = False
             self.content_selector.refresh_options(CONTENT_OPTIONS, "mods")
             self.modpacks_page.content_selector.refresh_options(CONTENT_OPTIONS, "mods")
+            self.content_packs_page.content_selector.refresh_options(CONTENT_OPTIONS, "mods")
             self._active = False
+        if self.content_type in {"shader", "resourcepack"}:
+            self._active = True
+            self.content_packs_page.enter(self.content_type, defer_load=defer_load)
+            return
         if self.content_type == "modpacks":
             self._active = True
             self.modpacks_page.enter(defer_load=defer_load)
@@ -308,6 +330,10 @@ class ModsPage(ft.Container):
             self._page.run_task(self._restore_scroll, self._generation, self._saved_scroll)
 
     def leave(self) -> None:
+        if self.content_type in {"shader", "resourcepack"}:
+            self.content_packs_page.leave()
+            self._active = False
+            return
         if self.content_type == "modpacks":
             self.modpacks_page.leave()
             self._active = False
@@ -474,6 +500,9 @@ class ModsPage(ft.Container):
         self._page.run_task(self._restore_scroll, self._generation, 0)
 
     def refresh(self, *, defer_load: bool = False, animate_list: bool = False) -> None:
+        if self.content_type in {"shader", "resourcepack"}:
+            self.content_packs_page.refresh(defer_load=defer_load)
+            return
         if self.content_type == "modpacks":
             self.modpacks_page.refresh(defer_load=defer_load)
             return
@@ -509,6 +538,9 @@ class ModsPage(ft.Container):
 
     def start_loading(self) -> None:
         """Start a prepared scan after the sidebar entrance has been mounted."""
+        if self.content_type in {"shader", "resourcepack"}:
+            self.content_packs_page.start_loading()
+            return
         if self.content_type == "modpacks":
             self.modpacks_page.start_loading()
             return
@@ -867,6 +899,9 @@ class ModsPage(ft.Container):
             self.refresh()
 
     def _render(self) -> None:
+        if self.content_type in {"shader", "resourcepack"}:
+            self.content_packs_page._render()
+            return
         if self.content_type == "modpacks":
             self.modpacks_page._render()
             return

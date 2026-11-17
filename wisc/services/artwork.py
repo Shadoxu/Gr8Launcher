@@ -73,12 +73,8 @@ def cover_name(version: str | None) -> str:
 def resolve_background_artwork(target: dict | None, minecraft_directory: str | None = None,
                                *, assets_dir: Path = ASSETS_DIR) -> BackgroundArtwork:
     """Resolve custom art or a bundled cover without downloading banner images."""
-    custom_target = dict(target or {})
-    # An explicitly cleared custom image must not resurrect an old cached copy.
-    if "custom_banner" in custom_target:
-        custom_target.pop("id", None)
     try:
-        custom = get_custom_instance_banner(custom_target, minecraft_directory)
+        custom = get_custom_instance_banner(target, minecraft_directory)
     except OSError:
         custom = None
     if custom:

@@ -36,7 +36,7 @@ from wisc.ui.progress import ProgressHost, track_progress
 from wisc.ui.scroll_views import ScrollColumn
 
 
-CONTENT_OPTIONS = [("mods", "Mods"), ("modpacks", "Modpacks")]
+CONTENT_OPTIONS = [("mods", "Mods"), ("modpacks", "Modpacks"), ("shader", "Shaders"), ("resourcepack", "Texture Packs")]
 PROVIDER_OPTIONS = [("modrinth", "Modrinth"), ("curseforge", "CurseForge")]
 SORT_OPTIONS = [("downloads", "Popular"), ("relevance", "Relevance"),
                 ("updated", "Recently updated"), ("newest", "Newest")]

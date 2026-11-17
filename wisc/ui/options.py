@@ -8,7 +8,8 @@ import random
 import sys
 import subprocess
 import flet as ft
-from wisc.ui.controls import LegacySelector, SimpleInput, launcher_button
+from wisc.ui.controls import LegacySelector, SimpleInput, launcher_button, launcher_back_button
+from wisc.ui.scroll_views import ScrollColumn
 from wisc.ui.glass import glass_panel
 from wisc.services import updates as launcher_updates
 from wisc.core.themes import DEFAULT_THEME
@@ -112,106 +113,114 @@ def build_options_views(
     player_name_state = state.player_name_state
 
 
-    def build_option_card(category):
-        card = ft.Button(
-            width=170,
-            height=130,
-            style=ft.ButtonStyle(
-                bgcolor={
-                    ft.ControlState.HOVERED: theme.get("card_hover", theme["card"]),
-                    ft.ControlState.DEFAULT: ft.Colors.TRANSPARENT,
-                },
-                side={
-                    ft.ControlState.HOVERED: ft.BorderSide(1, color=theme["border"]),
-                    ft.ControlState.DEFAULT: ft.BorderSide(1, color=theme["border"]),
-                },
-                shape=ft.RoundedRectangleBorder(radius=14),
-                elevation=0,
-                shadow_color=ft.Colors.TRANSPARENT,
-                overlay_color={
-                    ft.ControlState.PRESSED: ft.Colors.with_opacity(0.1, theme["btn_primary"]),
-                    ft.ControlState.DEFAULT: ft.Colors.TRANSPARENT,
-                },
-                padding=0,
-                mouse_cursor=clickable_mouse_cursor,
-            ),
-            on_click=lambda e, opt_id=category["id"]: navigate(opt_id),
-            content=ft.Column(
-                alignment=ft.MainAxisAlignment.CENTER,
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                spacing=12,
-                controls=[
-                    ft.Icon(
-                        category["icon"],
-                        size=34,
-                        color=theme["btn_primary"],
-                    ),
-                    ft.Text(
-                        category["title"],
-                        size=16,
-                        weight=ft.FontWeight.BOLD,
-                        color=theme["text_primary"],
-                    ),
-                ],
-            ),
+    def build_option_card(category: dict) -> ft.Container:
+        button = launcher_button("", lambda e: navigate(category["id"]), height=108)
+        button.style.bgcolor = {
+            ft.ControlState.DEFAULT: ft.Colors.TRANSPARENT,
+            ft.ControlState.HOVERED: theme["card_hover"],
+        }
+        button.style.shape = ft.RoundedRectangleBorder(radius=12)
+        button.style.padding = ft.Padding.all(18)
+        button.content = ft.Row(
+            spacing=16,
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            controls=[
+                ft.Container(
+                    width=48, height=48, border_radius=12,
+                    bgcolor=ft.Colors.with_opacity(0.12, theme["btn_primary"]),
+                    alignment=ft.Alignment.CENTER,
+                    content=ft.Icon(category["icon"], size=25, color=theme["btn_primary"]),
+                ),
+                ft.Column(
+                    expand=True, spacing=5,
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    horizontal_alignment=ft.CrossAxisAlignment.START,
+                    controls=[
+                        ft.Text(category["title"], size=16, weight=ft.FontWeight.W_600,
+                                color=theme["text_primary"]),
+                        ft.Text(category["description"], size=12, color=theme["text_secondary"]),
+                    ],
+                ),
+                ft.Icon(ft.Icons.CHEVRON_RIGHT, size=20, color=theme["text_muted"]),
+            ],
         )
-        return glass_panel(card, width=170, height=130, bgcolor=theme["surface"])
+        return glass_panel(
+            button, border_radius=12, bgcolor=theme["surface"],
+            col={"xs": 12, "md": 6, "xl": 4},
+        )
 
     options_categories = [
-        {"id": "options_ui", "title": "UI", "icon": ft.Icons.PALETTE_OUTLINED},
-        {"id": "options_java", "title": "Java", "icon": ft.Icons.MEMORY},
-        {"id": "options_game", "title": "Game", "icon": ft.Icons.SPORTS_ESPORTS_OUTLINED},
-        {"id": "options_accounts", "title": "Accounts", "icon": ft.Icons.PERSON_OUTLINE},
-        {"id": "options_launcher", "title": "Launcher", "icon": ft.Icons.TUNE},
-        {"id": "options_about", "title": "About", "icon": ft.Icons.INFO_OUTLINE},
+        {"id": "options_ui", "title": "Appearance", "icon": ft.Icons.PALETTE_OUTLINED,
+         "description": "Color palette and background effects"},
+        {"id": "options_java", "title": "Java & Memory", "icon": ft.Icons.MEMORY,
+         "description": "Java executable and allocated RAM"},
+        {"id": "options_game", "title": "Game", "icon": ft.Icons.SPORTS_ESPORTS_OUTLINED,
+         "description": "Window size, fullscreen and skins"},
+        {"id": "options_accounts", "title": "Accounts", "icon": ft.Icons.PERSON_OUTLINE,
+         "description": "Manage players, sign-ins and skins"},
+        {"id": "options_launcher", "title": "Launcher", "icon": ft.Icons.TUNE,
+         "description": "Launch behavior, Discord and logs"},
     ]
     if features:
-        options_categories.append({"id": "options_updates", "title": "Updates", "icon": ft.Icons.SYSTEM_UPDATE_ALT})
+        options_categories.append(
+            {"id": "options_updates", "title": "Updates", "icon": ft.Icons.SYSTEM_UPDATE_ALT,
+             "description": "Check for the latest Wisc release"})
 
+    category_cards = [build_option_card(category) for category in options_categories]
+    dashboard_header = ft.Row(
+        vertical_alignment=ft.CrossAxisAlignment.CENTER,
+        controls=[
+            ft.Column(
+                expand=True, spacing=6,
+                controls=[
+                    ft.Text("Settings", size=24, weight=ft.FontWeight.BOLD, color=theme["text_primary"]),
+                    ft.Text("Make Wisc feel at home.", size=13, color=theme["text_secondary"]),
+                ],
+            ),
+            ft.Container(
+                padding=ft.Padding.symmetric(horizontal=12, vertical=8),
+                border_radius=8, bgcolor=theme["surface"],
+                content=ft.Row([
+                    ft.Container(width=8, height=8, border_radius=4, bgcolor=theme["btn_primary"]),
+                    ft.Text(selected_theme["name"], size=12, color=theme["text_secondary"]),
+                ], spacing=8, tight=True),
+            ),
+        ],
+    )
+    dashboard_footer = glass_panel(
+        bgcolor=theme["surface"], border_radius=12,
+        padding=ft.Padding.symmetric(horizontal=18, vertical=12),
+        content=ft.ResponsiveRow(
+            spacing=12, run_spacing=10,
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            controls=[
+                ft.Column([
+                    ft.Text("Wisc", size=16, font_family="Pixelify Sans", color=theme["text_primary"]),
+                    ft.Text("A little help for your next adventure.", size=12, color=theme["text_secondary"]),
+                ], spacing=4, col={"xs": 12, "md": 6}),
+                ft.Row([
+                    launcher_button("About Wisc", lambda e: navigate("options_about"), icon=ft.Icons.INFO_OUTLINE),
+                    launcher_button("Replay welcome tour", lambda e: navigate("onboarding"),
+                                    icon=ft.Icons.AUTO_AWESOME_OUTLINED),
+                ], spacing=8, wrap=True, alignment=ft.MainAxisAlignment.END, col={"xs": 12, "md": 6}),
+            ],
+        ),
+    )
     options_orb1, options_orb2 = create_ambient_gradient_orbs(theme, settings.get("enable_orbs", True))
     options_dashboard = ft.Stack(
-        expand=True,
-        clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
+        expand=True, clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
+        data={"reveal_controls": [dashboard_header, *category_cards, dashboard_footer]},
         controls=[
-            options_orb1,
-            options_orb2,
+            options_orb1, options_orb2,
             ft.Container(
-                expand=True,
-                alignment=ft.Alignment.CENTER,
-                content=ft.Column(
-                    alignment=ft.MainAxisAlignment.CENTER,
-                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                    spacing=20,
+                expand=True, padding=ft.Padding.symmetric(horizontal=28, vertical=20),
+                content=ScrollColumn(
+                    expand=True, spacing=20, scroll=ft.ScrollMode.AUTO,
+                    horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
                     controls=[
-                        ft.Row(
-                            alignment=ft.MainAxisAlignment.CENTER,
-                            spacing=20,
-                            controls=[
-                                build_option_card(category)
-                                for category in options_categories[:3]
-                            ],
-                        ),
-                        ft.Row(
-                            alignment=ft.MainAxisAlignment.CENTER,
-                            spacing=20,
-                            controls=[
-                                build_option_card(category)
-                                for category in options_categories[3:]
-                            ],
-                        ),
-                        launcher_button("Replay welcome tour", lambda e: navigate("onboarding"),
-                                        icon=ft.Icons.AUTO_AWESOME_OUTLINED, height=36),
-                        ft.Container(
-                            margin=ft.Margin.only(top=16),
-                            padding=ft.Padding.symmetric(horizontal=32),
-                            content=ft.Text(
-                                f"\"{get_random_thought()}\"",
-                                size=12,
-                                italic=True,
-                                color=theme["text_muted"],
-                                text_align=ft.TextAlign.CENTER,
-                            ),
-                        ),
+                        dashboard_header,
+                        ft.ResponsiveRow(category_cards, spacing=12, run_spacing=12),
+                        dashboard_footer,
                     ],
                 ),
             ),
@@ -240,44 +249,27 @@ def build_options_views(
         control: ft.Control | None = None,
         extra_content: ft.Control | None = None,
     ) -> ft.Container:
-        items = [
-            ft.Text(
-                title,
-                size=15,
-                weight=ft.FontWeight.BOLD,
-                color=theme["text_primary"],
-            ),
-            ft.Text(
-                explanation,
-                size=12,
-                color=theme["text_secondary"],
-            ),
-        ]
-        if control is not None:
-            items.append(
-                ft.Container(
-                    content=control,
-                    padding=ft.Padding.only(top=4),
-                )
-            )
+        description = ft.Column(
+            spacing=6,
+            horizontal_alignment=ft.CrossAxisAlignment.START,
+            controls=[
+                ft.Text(title, size=15, weight=ft.FontWeight.W_600, color=theme["text_primary"]),
+                ft.Text(explanation, size=12, color=theme["text_secondary"]),
+            ],
+        )
+        items: list[ft.Control] = [description]
+        if isinstance(control, ft.Switch):
+            description.expand = True
+            items = [ft.Row([description, control], spacing=24,
+                            vertical_alignment=ft.CrossAxisAlignment.CENTER)]
+        elif control is not None:
+            items.append(ft.Container(content=control, padding=ft.Padding.only(top=8)))
         if extra_content is not None:
-            items.append(
-                ft.Container(
-                    content=extra_content,
-                    padding=ft.Padding.only(top=6),
-                )
-            )
-
+            items.append(ft.Container(content=extra_content, padding=ft.Padding.only(top=6)))
         return glass_panel(
-            bgcolor=theme["surface"],
-            border=ft.Border.all(1, color=theme["border"]),
-            border_radius=12,
-            padding=ft.Padding.symmetric(horizontal=20, vertical=16),
-            content=ft.Column(
-                spacing=8,
-                horizontal_alignment=ft.CrossAxisAlignment.START,
-                controls=items,
-            ),
+            bgcolor=theme["surface"], border_radius=12,
+            padding=ft.Padding.symmetric(horizontal=20, vertical=18),
+            content=ft.Column(spacing=8, horizontal_alignment=ft.CrossAxisAlignment.STRETCH, controls=items),
         )
 
     def build_settings_page(
@@ -285,51 +277,39 @@ def build_options_views(
         setting_items: list[ft.Container],
         on_reset=None,
     ) -> ft.Container:
+        subtitles = {
+            "Appearance": "Your palette and background effects.",
+            "Java & Memory": "Give Minecraft the resources it needs.",
+            "Game": "Set up your next Minecraft session.",
+            "Launcher": "Choose how Wisc works around your game.",
+            "About": "The launcher, its creator and your game files.",
+            "Updates": "Keep Wisc up to date.",
+        }
+        header = ft.Row(
+            spacing=16, vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            controls=[
+                launcher_back_button(lambda e: navigate("options"), label="Settings", tooltip="Back to Settings"),
+                ft.Column(
+                    expand=True, spacing=4,
+                    controls=[
+                        ft.Text(title, size=24, weight=ft.FontWeight.BOLD, color=theme["text_primary"]),
+                        ft.Text(subtitles.get(title, ""), size=12, color=theme["text_secondary"]),
+                    ],
+                ),
+                *([launcher_button("Reset defaults", on_reset, icon=ft.Icons.RESTORE)] if on_reset else []),
+            ],
+        )
         return ft.Container(
-            expand=True,
-            padding=ft.Padding.only(left=28, top=20, right=28, bottom=20),
+            expand=True, padding=ft.Padding.symmetric(horizontal=28, vertical=20),
+            data={"reveal_controls": [header, *setting_items]},
             content=ft.Column(
-                expand=True,
-                spacing=16,
-                scroll=ft.ScrollMode.AUTO,
-                horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
+                expand=True, spacing=20, horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
                 controls=[
-                    ft.Row(
-                        alignment=ft.MainAxisAlignment.START,
-                        vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                        spacing=8,
-                        controls=[
-                            ft.IconButton(
-                                icon=ft.Icons.ARROW_BACK,
-                                tooltip=tooltip("Back to Options"),
-                                icon_color=theme["text_secondary"],
-                                hover_color=theme["card_hover"],
-                                icon_size=20,
-                                style=rounded_button_style,
-                                on_click=lambda e: navigate("options"),
-                            ),
-                            ft.Text(
-                                title,
-                                size=24,
-                                weight=ft.FontWeight.BOLD,
-                                color=theme["text_primary"],
-                            ),
-                            *(
-                                [
-                                    ft.IconButton(
-                                        icon=ft.Icons.RESTORE,
-                                        tooltip="Reset this page to defaults",
-                                        icon_color=theme["text_secondary"],
-                                        style=ft.ButtonStyle(mouse_cursor=clickable_mouse_cursor),
-                                        on_click=on_reset,
-                                    )
-                                ]
-                                if on_reset is not None
-                                else []
-                            ),
-                        ],
+                    header,
+                    ScrollColumn(
+                        setting_items, expand=True, spacing=12, scroll=ft.ScrollMode.AUTO,
+                        horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
                     ),
-                    *setting_items,
                 ],
             ),
         )
@@ -402,7 +382,7 @@ def build_options_views(
         notify("UI settings restored to defaults.", ft.Icons.RESTORE)
 
     ui_subpage = build_settings_page(
-        "UI",
+        "Appearance",
         [
             build_setting_container(
                 "Theme Selection",
@@ -466,7 +446,8 @@ def build_options_views(
         expand=True,
         on_change=on_ram_slider_change,
     )
-    ram_input = ft.TextField(
+    ram_input = SimpleInput(
+        hint_text="RAM",
         value=str(settings["ram_mb"]),
         width=132,
         suffix=ft.Text("MB", color=theme["text_secondary"]),
@@ -475,7 +456,7 @@ def build_options_views(
         focused_border_color=theme["btn_primary"],
         color=theme["text_primary"],
         fill_color=theme["card"],
-        border_radius=8,
+        border_radius=5,
         on_change=on_ram_input_change,
         on_blur=on_ram_input_blur,
     )
@@ -496,7 +477,7 @@ def build_options_views(
         return handler
 
     java_subpage = build_settings_page(
-        "Java",
+        "Java & Memory",
         [
             build_setting_container(
                 "Allocated Memory (RAM)",
@@ -511,14 +492,14 @@ def build_options_views(
             ),
             build_setting_container(
                 "Java Executable",
-                "Specify a custom path to a Java binary (java.exe). Leave empty to use system default Java.",
-                control=ft.TextField(
+                "Leave empty to use system Java, or enter the path to your Java executable.",
+                control=SimpleInput(
                     hint_text="e.g. C:\\Program Files\\Java\\jdk-21\\bin\\java.exe",
                     border_color=theme["border"],
                     focused_border_color=theme["btn_primary"],
                     color=theme["text_primary"],
                     fill_color=theme["card"],
-                    border_radius=8,
+                    border_radius=5,
                     expand=True,
                     value=settings["java_path"],
                     on_change=on_java_path_change,
@@ -539,7 +520,9 @@ def build_options_views(
                 control=ft.Row(
                     spacing=12,
                     controls=[
-                        ft.TextField(
+                        SimpleInput(
+                            hint_text="Pixels",
+                            keyboard_type=ft.KeyboardType.NUMBER,
                             value=str(settings["window_width"]),
                             width=110,
                             prefix=ft.Text("W: ", color=theme["text_secondary"]),
@@ -547,10 +530,12 @@ def build_options_views(
                             focused_border_color=theme["btn_primary"],
                             color=theme["text_primary"],
                             fill_color=theme["card"],
-                            border_radius=8,
+                            border_radius=5,
                             on_change=on_positive_integer_change("window_width"),
                         ),
-                        ft.TextField(
+                        SimpleInput(
+                            hint_text="Pixels",
+                            keyboard_type=ft.KeyboardType.NUMBER,
                             value=str(settings["window_height"]),
                             width=110,
                             prefix=ft.Text("H: ", color=theme["text_secondary"]),
@@ -558,7 +543,7 @@ def build_options_views(
                             focused_border_color=theme["btn_primary"],
                             color=theme["text_primary"],
                             fill_color=theme["card"],
-                            border_radius=8,
+                            border_radius=5,
                             on_change=on_positive_integer_change("window_height"),
                         ),
                     ],
@@ -863,7 +848,7 @@ def build_options_views(
             ),
         ],
         on_reset=lambda e: reset_settings_fields(
-            ("launch_action", "capture_logs"), "Launcher"
+            ("launch_action", "capture_logs", "discord_rpc"), "Launcher"
         ),
     )
 

@@ -874,7 +874,7 @@ def main(page: ft.Page):
             if name == "mods":
                 features.reveal.show(content, features.mods.reveal_controls)
                 features.mods.start_loading()
-            elif name in ("home", "new_installation", "edit_installation", "configure_installed", "account_login", "options_accounts"):
+            elif isinstance(content.data, dict) and "reveal_controls" in content.data:
                 features.reveal.show(content, content.data["reveal_controls"])
 
         def show_page(name, content):
@@ -887,7 +887,7 @@ def main(page: ft.Page):
                 page.update()
                 if name == "mods":
                     features.mods.start_loading()
-                elif name in ("home", "new_installation", "edit_installation", "configure_installed", "account_login", "options_accounts"):
+                elif isinstance(content.data, dict) and "reveal_controls" in content.data:
                     features.reveal.show(content, content.data["reveal_controls"])
                 return
             transition_id += 1

@@ -41,6 +41,13 @@ Follow `design_theme.txt` and the restored classic components:
 - **Layout:** retain the original top navigation, custom window controls, Home launch panel, and library shelf. Keep selected version artwork across every page and do not restore a separate Home banner. Keep Mods & Modpacks and Options > Updates accessible. Check 1100x650 and larger windows; keep content scrollable and window controls usable.
 - **Motion/feedback:** keep the classic tab transitions and reuse `StaggeredReveal`, `ProfileDialogHost`, `ProfileList`, `ProgressHost`, and `ToastHost` for retained features. Keep transitions interruptible, restore state after navigation/canceled drags, and provide concise loading/error feedback.
 
+## Reuse Existing Components
+
+- Before adding a component, helper, or workflow anywhere in the repository, check the relevant package for an existing implementation and reuse or extend it.
+- Build new UI features by composing the existing page layouts, controls, surfaces, selectors, dialogs, progress, and notifications. Use the Mods area as the reference for discovery lists, toolbars, rows, and installation flows.
+- Use `card_surface` and `ModList` for discovery rows, keeping the Mods area's 8px row gaps, padding, typography, and stable row keys. Do not rebuild equivalent rows or dropdowns separately for each content type.
+- Keep shared behavior and styling in shared helpers. Add a new implementation only when existing components cannot support the feature, and preserve the established design and lifecycle patterns.
+
 ## Coding Style & Naming Conventions
 
 Use four spaces in new modules; preserve existing indentation, including legacy tabs. Use `snake_case`, `PascalCase` classes, and `UPPER_SNAKE_CASE` constants. Type-hint helpers. No formatter/linter is configured.
@@ -75,4 +82,4 @@ Use focused, descriptive subjects like `Add remote tag validation`. PRs should e
 
 ## Security & Configuration Tips
 
-New runtime data lives in Minecraft's `wisc/`; reuse existing `gr8launcher/` folders through `wisc.core.paths.launcher_data_dir`. Preserve native credential storage/redaction and legacy credential aliases. Exclude tokens, personal game data, and generated `build/`/`dist/` artifacts.
+Runtime data lives in Minecraft's `wisc/`; migrate existing `gr8launcher/` folders through `wisc.core.paths.launcher_data_dir`, preserving files and rebasing absolute data paths. Preserve native credential storage/redaction and legacy credential aliases, including aliases scoped to the old accounts path. Exclude tokens, personal game data, and generated `build/`/`dist/` artifacts.

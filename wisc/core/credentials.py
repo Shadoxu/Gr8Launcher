@@ -65,14 +65,17 @@ def _tokens(value) -> dict[str, str]:
 
 class CredentialStore:
     def __init__(self, namespace: str, *, service_prefix: str = "Wisc.Ely.by",
-                 legacy_service_prefixes: tuple[str, ...] | None = None):
+                 legacy_service_prefixes: tuple[str, ...] | None = None,
+                 legacy_namespaces: tuple[str, ...] = ()):
         scope = hashlib.sha256(namespace.encode("utf-8")).hexdigest()[:24]
         self.service = f"{service_prefix}.{scope}"
         if legacy_service_prefixes is None:
             legacy_service_prefixes = ("Gr8Launcher.Ely.by",) if service_prefix == "Wisc.Ely.by" else ()
-        self.legacy_services = tuple(dict.fromkeys(
-            f"{prefix}.{scope}" for prefix in legacy_service_prefixes if prefix != service_prefix
-        ))
+        aliases = [f"{prefix}.{scope}" for prefix in legacy_service_prefixes if prefix != service_prefix]
+        for legacy_namespace in legacy_namespaces:
+            legacy_scope = hashlib.sha256(legacy_namespace.encode("utf-8")).hexdigest()[:24]
+            aliases.extend(f"{prefix}.{legacy_scope}" for prefix in (service_prefix, *legacy_service_prefixes))
+        self.legacy_services = tuple(service for service in dict.fromkeys(aliases) if service != self.service)
         self._backend = None
         self._backend_checked = False
         self._sessions: dict[str, dict[str, str]] = {}

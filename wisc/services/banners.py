@@ -892,9 +892,10 @@ def get_custom_instance_banner(target: dict | None, minecraft_directory: str | N
     if custom_banner and Path(custom_banner).is_file():
         return str(custom_banner)
 
-    # Check if a custom banner for this profile ID exists in banner cache
+    # Only legacy profiles without a saved choice discover cached custom art.
+    # An explicit empty value means the user removed it in the profile editor.
     profile_id = target.get("id")
-    if profile_id:
+    if profile_id and "custom_banner" not in target:
         safe_id = re.sub(r"[^a-zA-Z0-9_\-]", "_", str(profile_id))
         for ext in _IMAGE_EXTENSIONS:
             candidate = get_banner_cache_dir() / f"custom_{safe_id}.{ext}"

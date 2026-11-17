@@ -248,8 +248,9 @@ class DiscordPresence:
             if not self._enabled:
                 return None
             activity = {
+                "name": "Wisc",
                 "details": PAGE_DETAILS.get(self._page, "Browsing the launcher"),
-                "state": "In the launcher",
+                "state": "In Wisc",
                 "start": self._launcher_started,
                 "large_image": DISCORD_LOGO,
                 "large_text": "Wisc",

@@ -10,14 +10,14 @@ tasks. All application imports use the `wisc` package.
 | Home, onboarding, and library | `ui/home.py`, `ui/onboarding.py`, `ui/library.py`, `ui/profiles.py` |
 | Accounts and profile editing | `ui/accounts.py`, `ui/installations.py`, `ui/profile_assets.py` |
 | Options and skins | `ui/options.py`, `ui/skins.py`, `ui/skin_viewer.py` |
-| Mods and modpacks | `ui/mods.py`, `ui/modpacks.py`, `ui/mod_details.py`, `ui/mod_install.py`, `ui/mod_list.py` |
+| Mods, modpacks, shaders, and texture packs | `ui/mods.py`, `ui/modpacks.py`, `ui/content_packs.py`, `ui/mod_details.py`, `ui/mod_install.py`, `ui/mod_list.py` |
 | Shared UI and window artwork | `ui/glass.py`, `ui/shell.py`, `ui/components.py`, `ui/controls.py`, `ui/dialogs.py`, `ui/theme.py`, `ui/scroll_views.py`, `ui/motion.py` |
 | Feature lifecycle and feedback | `ui/features.py`, `ui/progress.py`, `ui/toasts.py`, `ui/updates.py` |
 | Minecraft install and launch | `services/launcher.py` |
 | Local discovery, connectivity, game logs, and profile operations | `services/instances.py`, `services/profiles.py` |
 | Accounts, skins, artwork, and Discord | `services/auth.py`, `services/skins.py`, `services/artwork.py`, `services/banners.py`, `services/discord_presence.py` |
 | Launcher update discovery and handoff | `services/updates.py`, `tools/updater/Program.cs` |
-| Mod management and providers | `mods/manager.py`, `mods/platform.py`, `mods/curseforge.py` |
+| Mod and content management and providers | `mods/manager.py`, `mods/content.py`, `mods/platform.py`, `mods/curseforge.py` |
 | Compatibility, descriptions, and modpacks | `mods/compatibility.py`, `mods/markdown.py`, `mods/modpacks.py` |
 | Settings, profiles, and secrets | `core/storage.py`, `core/credentials.py` |
 | Shared runtime state and palettes | `core/state.py`, `core/themes.py` |
@@ -50,8 +50,9 @@ current working directory. `application_root()` resolves the executable's
 directory in packaged runs and the repository root in source runs.
 
 Use `core.paths.launcher_data_dir()` for runtime data. New installations use
-Minecraft's `wisc/`; existing `gr8launcher/` folders remain in place to preserve
-absolute artwork paths, modpack journals, and credential scopes. Legacy `.data`
+Minecraft's `wisc/`; existing `gr8launcher/` folders migrate to `wisc/`, rebasing
+absolute artwork paths and modpack journals while keeping old credential scopes
+available as native vault aliases. Legacy `.data`
 migration still starts at the resource root. Native credential stores read old
 service aliases and migrate only after a verified native save. Existing aliases
 stay synchronized for rollback; sign-out clears both names. Fonts, artwork,

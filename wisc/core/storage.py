@@ -16,7 +16,7 @@ LEGACY_DATA_DIR = RESOURCE_ROOT / ".data"
 
 
 def get_data_dir() -> Path:
-    """Return persistent Wisc data, reusing an existing legacy data folder.
+    """Return persistent Wisc data, migrating the old gr8launcher folder.
     Automatically migrates any legacy .data folder from the application directory on first run.
     """
     mc_dir = Path(minecraft_launcher_lib.utils.get_minecraft_directory())
@@ -454,7 +454,11 @@ def _account_transaction(function):
 def _credential_store() -> CredentialStore:
     namespace = os.path.normcase(str(ACCOUNTS_FILE.resolve()))
     if namespace not in _CREDENTIAL_STORES:
-        _CREDENTIAL_STORES[namespace] = CredentialStore(namespace)
+        legacy_namespaces = ()
+        if ACCOUNTS_FILE.parent.name == "wisc":
+            legacy = ACCOUNTS_FILE.parent.parent / "gr8launcher" / ACCOUNTS_FILE.name
+            legacy_namespaces = (os.path.normcase(str(legacy.resolve())),)
+        _CREDENTIAL_STORES[namespace] = CredentialStore(namespace, legacy_namespaces=legacy_namespaces)
     return _CREDENTIAL_STORES[namespace]
 
 

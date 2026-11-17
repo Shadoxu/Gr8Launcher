@@ -275,6 +275,17 @@ def _digest(path: Path, algorithm: str = "sha512") -> str:
     return digest.hexdigest()
 
 
+def primary_content_file(version: dict) -> dict:
+    """Pick a shader/resource pack ZIP without changing mod JAR rules."""
+    candidates = [file for file in version.get("files", [])
+                  if str(file.get("filename", "")).lower().endswith(".zip") and not file.get("file_type")]
+    if not candidates:
+        raise ValueError("This version has no installable pack ZIP.")
+    file = next((file for file in candidates if file.get("primary")), candidates[0])
+    safe_archive_name(file["filename"], ("zip",))
+    return file
+
+
 def _archive_icon(jar: zipfile.ZipFile, reference) -> bytes | None:
     """Read a bounded raster icon from the JAR without extracting files."""
     if isinstance(reference, dict):
